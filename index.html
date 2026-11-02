@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>萌宝少儿围棋 (Kids Go Master)</title>
+  
+  <!-- iPad / iOS 独立桌面 App 运行增强 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="萌宝围棋">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="assets/icons/icon-512.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff6b81">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 顶部标题与音效栏 -->
+  <header class="top-header">
+    <div class="logo-area">
+      <span class="app-icon">🐼</span>
+      <h1 class="app-title">萌宝少儿围棋</h1>
+    </div>
+    <div class="header-tools">
+      <button class="install-pill-btn" id="btnInstallGuide" title="把围棋放到iPad桌面">📲 放到桌面</button>
+      <button class="icon-btn" id="toggleVoice" title="自动语音朗读">🗣️</button>
+      <button class="icon-btn" id="toggleSound" title="声音开关">🔊</button>
+    </div>
+  </header>
+
+  <!-- 模式切换选项卡 -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" id="tabAcademy">
+      <span>📖</span> 基础知识闯关
+    </button>
+    <button class="tab-btn" id="tabMatch">
+      <span>⚔️</span> 萌宠段位对战
+    </button>
+    <button class="tab-btn" id="tabBadges">
+      <span>🏅</span> 荣誉勋章
+    </button>
+  </nav>
+
+  <main class="main-container">
+    
+    <!-- 1. 基础知识闯关练习视图（关卡导航） -->
+    <section class="view-section active" id="viewAcademy">
+      <div class="level-selector-card">
+        <div class="level-header-row">
+          <span class="level-title-large">🌟 趣味知识闯关</span>
+          <span style="font-size: 13px; color: #ff6b81; font-weight: bold;">循序渐进 · 快乐启蒙</span>
+        </div>
+        <div class="level-chips-scroll" id="levelChipsContainer">
+          <!-- 动态生成关卡标签 -->
+        </div>
+      </div>
+
+      <div class="instruction-box">
+        <div id="puzzleInstruction">加载关卡中...</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <button class="voice-btn" id="btnSpeakInstruction">
+            <span class="voice-icon">📢</span> <span id="voiceBtnText">听师傅读题</span>
+          </button>
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: bold; color: #747d8c;">
+            <span>配音音色:</span>
+            <select id="selectVoicePack" style="padding: 6px 12px; border-radius: 14px; border: 2px solid #ffd591; background: #fff; font-weight: 700; color: #2d3436; cursor: pointer;">
+              <option value="xiaoxiao" selected>🌟 晓晓老师 · 温暖少儿故事 (Neural 真人感)</option>
+              <option value="xiaoyi">👧 晓伊姐姐 · 甜美动漫萌音 (Neural)</option>
+              <option value="yunxia">👦 云夏弟弟 · 活泼正太童声 (Neural)</option>
+              <option value="yunxi">🐼 云希哥哥 · 阳光熊猫师傅 (Neural)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 我的勋章视图 -->
+    <section class="view-section" id="viewBadges">
+      <div class="level-selector-card">
+        <div class="level-header-row">
+          <span class="level-title-large">🏆 围棋小大师勋章馆</span>
+        </div>
+        <p style="font-size: 13px; color: #747d8c; margin-bottom: 12px;">完成知识闯关或在对弈中升级，即可点亮专属勋章！</p>
+        <div class="badge-grid" id="badgeGrid">
+          <!-- 动态生成勋章卡片 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 核心棋盘与操作区 -->
+    <div class="game-layout" id="gameLayout">
+      <div class="board-column">
+        <!-- 萌宠卡片（带自适应段位与实时说话气泡） -->
+        <div class="pet-card">
+          <div class="pet-avatar-wrapper">
+            <div class="pet-avatar" id="petAvatar">🐼</div>
+          </div>
+          <div class="pet-info">
+            <div class="pet-name-row">
+              <span class="pet-name" id="petName">熊猫师傅</span>
+              <span class="rank-badge" id="petRank">启蒙导师</span>
+            </div>
+            <div class="pet-speech" id="petSpeech">你好呀！欢迎来到围棋世界，让我们开始第一课吧！</div>
+          </div>
+        </div>
+
+        <!-- 棋盘容器 -->
+        <div class="board-wrapper" id="boardWrapper">
+          <canvas id="boardCanvas"></canvas>
+          <!-- 触控悬浮放大准星（专为手指触控优化防遮挡） -->
+          <div class="touch-loupe" id="touchLoupe"></div>
+        </div>
+      </div>
+
+      <!-- 侧边面板：记分与功能控制 -->
+      <div class="side-panel">
+        <!-- 吃子记分板（仅在对弈模式显示） -->
+        <div class="score-box" id="scoreBox" style="display: none;">
+          <div class="player-score">
+            <span class="stone-pill black"></span>
+            <div>
+              <div class="score-num" id="blackScore" style="color: #2f3542;">0</div>
+              <div class="score-label">小选手提子</div>
+            </div>
+          </div>
+          <div style="font-size: 20px; font-weight: 800; color: #ff7675;">VS</div>
+          <div class="player-score">
+            <span class="stone-pill white"></span>
+            <div>
+              <div class="score-num" id="whiteScore" style="color: #57606f;">0</div>
+              <div class="score-label">对手提子</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 闯关专用控制按钮 -->
+        <div id="academyControls">
+          <div class="action-buttons">
+            <button class="btn-fun btn-accent" id="btnResetPuzzle">
+              <span>🔄</span> 重新摆棋
+            </button>
+            <button class="btn-fun btn-green" id="btnNextPuzzle">
+              <span>👉</span> 下一关
+            </button>
+          </div>
+        </div>
+
+        <!-- 对战专用控制按钮 -->
+        <div id="matchControls" style="display: none; flex-direction: column; gap: 10px;">
+          <div class="action-buttons">
+            <button class="btn-fun btn-primary" id="btnUndo">
+              <span>↩️</span> 悔棋一步
+            </button>
+            <button class="btn-fun btn-accent" id="btnRestart">
+              <span>🔄</span> 重新开局
+            </button>
+            <button class="btn-fun btn-secondary" id="btnPass">
+              <span>✋</span> 停一手(Pass)
+            </button>
+            <button class="btn-fun btn-green" id="btnHint">
+              <span>💡</span> 熊猫支招
+            </button>
+          </div>
+
+          <!-- 对局设置选项 -->
+          <div class="toggle-row">
+            <span>棋盘规格</span>
+            <select id="selectBoardSize" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ddd; font-weight: 700; background: #fff;">
+              <option value="9" selected>9路盘 (快速入门)</option>
+              <option value="13">13路盘 (中盘实战)</option>
+              <option value="19">19路盘 (标准大盘)</option>
+            </select>
+          </div>
+
+          <div class="toggle-row">
+            <span>对战玩法</span>
+            <select id="selectGameMode" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ddd; font-weight: 700; background: #fff;">
+              <option value="capture" data-target="3" selected>吃子棋 (先吃3子赢)</option>
+              <option value="capture" data-target="5">吃子棋 (先吃5子赢)</option>
+              <option value="territory">标准围地数子</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 少儿贴心辅助开关 -->
+        <div class="toggle-row">
+          <span>🟢 气数与危险预警提示</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleLiberties" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 胜利/晋级大捷弹窗 -->
+  <div class="modal-overlay" id="victoryModal">
+    <div class="modal-content">
+      <div class="star-celebration">⭐ 🌟 ⭐</div>
+      <h3 class="modal-title" id="modalTitle">闯关大成功！</h3>
+      <p class="modal-desc" id="modalDesc">太棒了，你找到了正确的方法！</p>
+      <button class="btn-fun btn-primary" id="btnModalAction" style="width: 100%; font-size: 18px; padding: 14px;">
+        继续前进！
+      </button>
+    </div>
+  </div>
+
+  <!-- 专为异地长辈与小朋友设计的超大字「放到 iPad 桌面」图文傻瓜指引弹窗 -->
+  <div class="modal-overlay" id="installGuideModal">
+    <div class="modal-content install-guide-card">
+      <div class="corner-pointer-badge">👆 请看屏幕右上角</div>
+      <h3 class="modal-title" style="font-size: 24px; color: #ff4757; margin-bottom: 12px;">🐼 放到 iPad 桌面（超简单 2 步）</h3>
+      <div id="installGuideSteps" class="install-steps-box">
+        <!-- 根据微信或 Safari 自动切换超大字步骤 -->
+      </div>
+      <div style="background: #f1f2f6; border-radius: 14px; padding: 10px 14px; margin-bottom: 16px; font-size: 15px; color: #2f3542; font-weight: 700;">
+        💡 温馨提示：哪怕不添加到桌面，现在也<strong>可以直接点棋盘开始玩</strong>哦！
+      </div>
+      <button class="btn-fun btn-green" id="btnCloseInstallGuide" style="width: 100%; font-size: 19px; padding: 14px;">
+        我知道啦，开始下棋！
+      </button>
+    </div>
+  </div>
+
+  <!-- 模块化脚本加载 -->
+  <script src="js/audio.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/go-engine.js"></script>
+  <script src="js/puzzles.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

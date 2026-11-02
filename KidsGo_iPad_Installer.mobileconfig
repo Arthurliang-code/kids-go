@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>FullScreen</key>
+            <true/>
+            <key>Icon</key>
+            <data>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</data>
+            <key>IsRemovable</key>
+            <true/>
+            <key>Label</key>
+            <string>萌宝围棋</string>
+            <key>PayloadDescription</key>
+            <string>萌宝少儿围棋 iPad 独立运行桌面快捷应用</string>
+            <key>PayloadDisplayName</key>
+            <string>萌宝围棋</string>
+            <key>PayloadIdentifier</key>
+            <string>com.kidsgo.webclip.f0a298d4-024f-4137-8592-b7314c978912</string>
+            <key>PayloadType</key>
+            <string>com.apple.webClip.managed</string>
+            <key>PayloadUUID</key>
+            <string>f0a298d4-024f-4137-8592-b7314c978912</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>Precomposed</key>
+            <true/>
+            <key>URL</key>
+            <string>http://192.168.101.57:8088</string>
+        </dict>
+    </array>
+    <key>PayloadDescription</key>
+    <string>安装后将在 iPad 桌面生成全屏独立运行的【萌宝围棋】App 图标</string>
+    <key>PayloadDisplayName</key>
+    <string>萌宝少儿围棋 (iPad 独立桌面版)</string>
+    <key>PayloadIdentifier</key>
+    <string>com.kidsgo.profile.159bea65-56b3-4cd2-b3d0-52fd477aa812</string>
+    <key>PayloadOrganization</key>
+    <string>Kids Go Studio</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false/>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>159bea65-56b3-4cd2-b3d0-52fd477aa812</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>
