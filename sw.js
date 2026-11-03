@@ -1,13 +1,13 @@
 // sw.js - Service Worker 离线缓存引擎（v3 Neural 神经网络语音升级版）
 
-const CACHE_NAME = 'kids-go-v3-neural';
+const CACHE_NAME = 'kids-go-v4-teach-answer';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './css/style.css',
-  './js/audio.js',
+  './js/sound.js',
   './js/voice.js',
   './js/go-engine.js',
   './js/puzzles.js',

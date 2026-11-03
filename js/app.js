@@ -36,7 +36,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 闯关相关
   const levelChipsContainer = document.getElementById('levelChipsContainer');
+  const instructionBox = document.getElementById('instructionBox');
+  const btnPhaseTeach = document.getElementById('btnPhaseTeach');
+  const btnPhasePractice = document.getElementById('btnPhasePractice');
+  const teachingStepBadge = document.getElementById('teachingStepBadge');
+  const teachingNavBar = document.getElementById('teachingNavBar');
+  const btnPrevTeachStep = document.getElementById('btnPrevTeachStep');
+  const btnNextTeachStep = document.getElementById('btnNextTeachStep');
+  const btnStartPracticeNow = document.getElementById('btnStartPracticeNow');
+  const teachingDots = document.getElementById('teachingDots');
+  const btnQuickTogglePhase = document.getElementById('btnQuickTogglePhase');
+  const btnReplayTeach = document.getElementById('btnReplayTeach');
   const puzzleInstruction = document.getElementById('puzzleInstruction');
+  const answerRevealBox = document.getElementById('answerRevealBox');
+  const answerRevealText = document.getElementById('answerRevealText');
+  const btnAutoPlayAnswer = document.getElementById('btnAutoPlayAnswer');
+  const btnInlineShowAnswer = document.getElementById('btnInlineShowAnswer');
+  const btnShowAnswer = document.getElementById('btnShowAnswer');
+  const btnShowAnswerText = document.getElementById('btnShowAnswerText');
   const btnNextPuzzle = document.getElementById('btnNextPuzzle');
   const btnResetPuzzle = document.getElementById('btnResetPuzzle');
   const toggleVoice = document.getElementById('toggleVoice');
@@ -54,7 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
     () => {
       if (btnSpeakInstruction) btnSpeakInstruction.classList.remove('speaking');
       if (petAvatar) petAvatar.classList.remove('speaking');
-      if (voiceBtnText) voiceBtnText.textContent = '听师傅读题';
+      if (voiceBtnText) {
+        voiceBtnText.textContent = (currentMode === 'academy' && academySubMode === 'teach')
+          ? '听师傅讲课'
+          : '听师傅读题';
+      }
     }
   );
 
@@ -74,8 +95,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 运行时状态
   let currentMode = 'academy'; // 'academy' | 'match'
+  let academySubMode = 'teach'; // 'teach' (课前教学演示) | 'practice' (动手闯关练习)
+  let currentTeachStepIndex = 0;
   let currentPuzzleIndex = 0;
   let puzzleIdentifiedPoints = new Set(); // 答题模式下已点击的点
+  let showPuzzleAnswer = false; // 是否在棋盘与讲台显示本题标准答案
+  let isAnimatingFollowUp = false; // 通关后棋盘动态演示锁定
+  let followUpTimers = [];
   let touchActive = false;
   let hoverGridCoord = null;
   let hintCoord = null;         // 熊猫支招专属提示坐标
@@ -103,9 +129,16 @@ document.addEventListener('DOMContentLoaded', () => {
     hintCoord = null;
   }
 
-  // 本地存储进度
+  function clearFollowUpTimers() {
+    while (followUpTimers.length > 0) {
+      clearTimeout(followUpTimers.pop());
+    }
+    isAnimatingFollowUp = false;
+  }
+
+  // 本地存储进度（passedPuzzles 仅记录真正完成判题过关的关卡 ID）
   let userProgress = {
-    passedPuzzles: [1], // 默认解锁第1关
+    passedPuzzles: [],
     unlockedBadges: [],
     stars: 0,
     gamesWon: 0
@@ -114,7 +147,16 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     const saved = localStorage.getItem('kids_go_progress');
     if (saved) {
-      userProgress = Object.assign(userProgress, JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      userProgress = Object.assign(userProgress, parsed);
+      // 修正旧版本初始把未通关的第1关或下一关塞进 passedPuzzles 的历史遗留数据
+      if (
+        Array.isArray(userProgress.passedPuzzles) &&
+        userProgress.stars === 0 &&
+        (!userProgress.unlockedBadges || userProgress.unlockedBadges.length === 0)
+      ) {
+        userProgress.passedPuzzles = [];
+      }
     }
   } catch (e) {
     console.warn('读取本地记录失败', e);
@@ -126,12 +168,19 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {}
   }
 
-  // ====== 1. 高分辨率与响应式画布尺寸自适应 ======
+  // ====== 1. 高分辨率与响应式画布尺寸自适应（全面适配小尺寸 iPad Pro 横竖屏与分屏） ======
   function resizeCanvas() {
     const rect = boardWrapper.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
     const dpr = window.devicePixelRatio || 1;
-    const padding = 20;
-    const displaySize = Math.min(rect.width, rect.height) - padding * 2;
+    const computed = window.getComputedStyle(boardWrapper);
+    const padX = (parseFloat(computed.paddingLeft) || 14) + (parseFloat(computed.paddingRight) || 14);
+    const padY = (parseFloat(computed.paddingTop) || 14) + (parseFloat(computed.paddingBottom) || 14);
+    const borderX = (parseFloat(computed.borderLeftWidth) || 0) + (parseFloat(computed.borderRightWidth) || 0);
+    const borderY = (parseFloat(computed.borderTopWidth) || 0) + (parseFloat(computed.borderBottomWidth) || 0);
+    const availW = rect.width - padX - borderX;
+    const availH = rect.height - padY - borderY;
+    const displaySize = Math.max(180, Math.floor(Math.min(availW, availH)));
 
     canvas.style.width = `${displaySize}px`;
     canvas.style.height = `${displaySize}px`;
@@ -143,6 +192,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('orientationchange', () => {
+    setTimeout(resizeCanvas, 120);
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', resizeCanvas);
+  }
+  if (typeof ResizeObserver !== 'undefined' && boardWrapper) {
+    const ro = new ResizeObserver(() => resizeCanvas());
+    ro.observe(boardWrapper);
+  }
 
   // ====== 2. 坐标转换与星位计算 ======
   function getBoardMetrics() {
@@ -231,6 +290,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     ctx.stroke();
 
+    // 棋盘边缘行列数字坐标（1..size），方便对照答案中的“第X列、第Y行”
+    ctx.save();
+    ctx.fillStyle = 'rgba(90, 61, 27, 0.72)';
+    ctx.font = `bold ${Math.max(10, Math.floor(margin * 0.36))}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const coordOffset = Math.max(12, margin * 0.54);
+    for (let i = 0; i < size; i++) {
+      const topPt = gridToPixel(i, 0);
+      ctx.fillText(String(i + 1), topPt.px, topPt.py - coordOffset);
+      const leftPt = gridToPixel(0, i);
+      ctx.fillText(String(i + 1), leftPt.px - coordOffset, leftPt.py);
+    }
+    ctx.restore();
+
     // 星位（天元与星）
     const stars = getStarPoints(size);
     ctx.fillStyle = '#5a3d1b';
@@ -276,33 +350,54 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.fill();
     }
 
-    // 闯关模式下的特殊标记（已点击认出的气、提示点等）
+    // 闯关模式下的特殊标记（课前教学图解标注、已点击认出的气、提示点等）
     if (currentMode === 'academy') {
       const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
-      if (puzzle.type === 'identify_liberties' || puzzle.type === 'identify_suicide') {
+      if (academySubMode === 'teach' && puzzle.teachingSteps && puzzle.teachingSteps[currentTeachStepIndex]) {
+        drawTeachingStepOverlay(puzzle.teachingSteps[currentTeachStepIndex], stoneRadius, cellSize);
+      } else if (puzzle.type === 'identify_liberties' || puzzle.type === 'identify_suicide') {
         for (const ptStr of puzzleIdentifiedPoints) {
           const [ix, iy] = ptStr.split(',').map(Number);
           const p = gridToPixel(ix, iy);
           ctx.beginPath();
-          ctx.arc(p.px, p.py, stoneRadius * 0.5, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(46, 213, 115, 0.7)';
+          ctx.arc(p.px, p.py, stoneRadius * 0.55, 0, Math.PI * 2);
+          ctx.fillStyle = puzzle.type === 'identify_suicide'
+            ? 'rgba(255, 71, 87, 0.85)'
+            : 'rgba(46, 213, 115, 0.85)';
           ctx.fill();
           ctx.strokeStyle = '#fff';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2.5;
           ctx.stroke();
 
-          // 绘制可爱小笑脸
           ctx.fillStyle = '#fff';
-          ctx.font = '14px sans-serif';
+          ctx.font = `bold ${Math.max(13, Math.floor(stoneRadius * 0.65))}px sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText('✓', p.px, p.py);
+          ctx.fillText(puzzle.type === 'identify_suicide' ? '禁' : '✓', p.px, p.py);
         }
+      } else if (puzzle.id === 9 && isAnimatingFollowUp) {
+        // 第9关两眼活棋完成后，高亮标出新分出来的左右两只真眼
+        drawTeachingStepOverlay({
+          markers: [
+            { x: 2, y: 3, text: '真眼', style: 'good' },
+            { x: 4, y: 3, text: '真眼', style: 'good' }
+          ]
+        }, stoneRadius, cellSize);
+      }
+
+      // 如果开启了“显示本题答案”，在棋盘上高亮标出标准答案坐标与后续变化序号
+      if (showPuzzleAnswer && !isAnimatingFollowUp) {
+        drawPuzzleAnswerOverlay(puzzle, stoneRadius, cellSize);
       }
     }
 
-    // 触控悬浮半透明棋子预落子投影
-    if (hoverGridCoord && engine.board[hoverGridCoord.gy][hoverGridCoord.gx] === EMPTY) {
+    // 触控悬浮半透明棋子预落子投影（仅在练习或对战且未锁定时显示）
+    if (
+      !isAnimatingFollowUp &&
+      !(currentMode === 'academy' && academySubMode === 'teach') &&
+      hoverGridCoord &&
+      engine.board[hoverGridCoord.gy][hoverGridCoord.gx] === EMPTY
+    ) {
       const pt = gridToPixel(hoverGridCoord.gx, hoverGridCoord.gy);
       ctx.save();
       ctx.globalAlpha = 0.55;
@@ -328,6 +423,193 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.fillText('💡', pt.px, pt.py);
       ctx.restore();
     }
+  }
+
+  // 绘制课前教学步骤的可视化辅助图层（呼吸连线、方向箭头、正误与要点角标）
+  function drawTeachingStepOverlay(step, stoneRadius, cellSize) {
+    ctx.save();
+
+    // 1. 呼吸通道高亮连线
+    if (Array.isArray(step.lines)) {
+      for (const ln of step.lines) {
+        const p1 = gridToPixel(ln.x1, ln.y1);
+        const p2 = gridToPixel(ln.x2, ln.y2);
+        ctx.beginPath();
+        ctx.moveTo(p1.px, p1.py);
+        ctx.lineTo(p2.px, p2.py);
+        ctx.strokeStyle = ln.color || '#2ed573';
+        ctx.lineWidth = Math.max(5, cellSize * 0.12);
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+    }
+
+    // 2. 逃生/追击方向引导箭头
+    if (Array.isArray(step.arrows)) {
+      for (const ar of step.arrows) {
+        const p1 = gridToPixel(ar.fromX, ar.fromY);
+        const p2 = gridToPixel(ar.toX, ar.toY);
+        const angle = Math.atan2(p2.py - p1.py, p2.px - p1.px);
+        const headLen = Math.max(10, stoneRadius * 0.55);
+
+        ctx.beginPath();
+        ctx.moveTo(p1.px, p1.py);
+        ctx.lineTo(p2.px, p2.py);
+        ctx.strokeStyle = ar.color || '#2ed573';
+        ctx.lineWidth = Math.max(4, cellSize * 0.1);
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(p2.px, p2.py);
+        ctx.lineTo(p2.px - headLen * Math.cos(angle - Math.PI / 6), p2.py - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(p2.px - headLen * Math.cos(angle + Math.PI / 6), p2.py - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fillStyle = ar.color || '#2ed573';
+        ctx.fill();
+      }
+    }
+
+    // 3. 交叉点教学圆章标注（①②③④、✓、✗、门柱、真眼等）
+    if (Array.isArray(step.markers)) {
+      const stylePalette = {
+        good: { bg: 'rgba(46, 213, 115, 0.92)', border: '#ffffff' },
+        bad: { bg: 'rgba(255, 71, 87, 0.92)', border: '#ffffff' },
+        warn: { bg: 'rgba(255, 165, 2, 0.92)', border: '#ffffff' },
+        info: { bg: 'rgba(30, 144, 255, 0.92)', border: '#ffffff' }
+      };
+
+      for (const mk of step.markers) {
+        const pt = gridToPixel(mk.x, mk.y);
+        const pal = stylePalette[mk.style] || stylePalette.info;
+        const hasStone = engine.inBounds(mk.x, mk.y) && engine.board[mk.y][mk.x] !== EMPTY;
+        // 如果该位置已有棋子，则把标签画在棋子正下方或中心胶囊上，避免遮挡整颗棋子
+        const isLongText = String(mk.text).length >= 2;
+        const badgeR = isLongText ? stoneRadius * 0.68 : stoneRadius * 0.54;
+
+        ctx.beginPath();
+        ctx.arc(pt.px, pt.py, badgeR, 0, Math.PI * 2);
+        ctx.fillStyle = pal.bg;
+        ctx.fill();
+        ctx.strokeStyle = pal.border;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        const fontSize = isLongText
+          ? Math.max(11, Math.floor(stoneRadius * 0.48))
+          : Math.max(14, Math.floor(stoneRadius * 0.68));
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(mk.text, pt.px, pt.py + (hasStone ? 0 : 0.5));
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // 绘制试题标准答案棋盘可视化指引（金色星标、正解落点预览与后续连招序号）
+  function drawPuzzleAnswerOverlay(puzzle, stoneRadius, cellSize) {
+    if (!puzzle) return;
+    ctx.save();
+
+    if (puzzle.type === 'identify_liberties' || puzzle.type === 'identify_suicide') {
+      const pts = puzzle.targetPoints || [];
+      pts.forEach((ptCoord, idx) => {
+        const key = `${ptCoord.x},${ptCoord.y}`;
+        if (puzzleIdentifiedPoints.has(key)) return; // 已经点对的不重复遮挡
+        const pt = gridToPixel(ptCoord.x, ptCoord.y);
+
+        // 外层金色呼吸光环
+        ctx.beginPath();
+        ctx.arc(pt.px, pt.py, stoneRadius * 0.78, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.28)';
+        ctx.fill();
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // 中心答案角标
+        ctx.beginPath();
+        ctx.arc(pt.px, pt.py, stoneRadius * 0.54, 0, Math.PI * 2);
+        ctx.fillStyle = puzzle.type === 'identify_suicide'
+          ? 'rgba(239, 68, 68, 0.94)'
+          : 'rgba(245, 158, 11, 0.95)';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        const label = pts.length > 1 ? `★${idx + 1}` : '★禁';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(12, Math.floor(stoneRadius * 0.52))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, pt.px, pt.py);
+      });
+    } else if (puzzle.type === 'play_move') {
+      const moves = puzzle.validMoves || [];
+      moves.forEach((mv, idx) => {
+        const pt = gridToPixel(mv.x, mv.y);
+
+        // 半透明正解黑子预览
+        if (engine.inBounds(mv.x, mv.y) && engine.board[mv.y][mv.x] === EMPTY) {
+          ctx.save();
+          ctx.globalAlpha = 0.45;
+          drawStone(pt.px, pt.py, stoneRadius, puzzle.playerColor || BLACK);
+          ctx.restore();
+        }
+
+        // 外圈金色光环
+        ctx.beginPath();
+        ctx.arc(pt.px, pt.py, stoneRadius * 0.92, 0, Math.PI * 2);
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 3.5;
+        ctx.stroke();
+
+        // 正解星标胶囊
+        ctx.beginPath();
+        ctx.arc(pt.px, pt.py, stoneRadius * 0.58, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.95)';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        const label = moves.length > 1 ? `★${idx + 1}` : '★正解';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(11, Math.floor(stoneRadius * 0.46))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, pt.px, pt.py);
+      });
+
+      // 若有后续连招演示（如第10关扭羊头征子），标出后续步骤序号 ②③④...
+      if (Array.isArray(puzzle.followUpSequence) && puzzle.followUpSequence.length > 0) {
+        puzzle.followUpSequence.forEach((step, idx) => {
+          const pt = gridToPixel(step.x, step.y);
+          const stepNum = idx + 2; // 第一手是①，后续从2开始
+          ctx.beginPath();
+          ctx.arc(pt.px, pt.py, stoneRadius * 0.44, 0, Math.PI * 2);
+          ctx.fillStyle = step.color === BLACK
+            ? 'rgba(30, 39, 46, 0.88)'
+            : 'rgba(255, 255, 255, 0.92)';
+          ctx.fill();
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.fillStyle = step.color === BLACK ? '#ffd700' : '#d97706';
+          ctx.font = `bold ${Math.max(11, Math.floor(stoneRadius * 0.48))}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(stepNum), pt.px, pt.py);
+        });
+      }
+    }
+
+    ctx.restore();
   }
 
   // 绘制具备 3D 拟真质感的黑白棋子
@@ -475,12 +757,115 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // 判断某个坐标是否是盘面任意一颗棋子的斜角紧邻点（用于第1/2关针对性提醒“斜角不算气”）
+  function isDiagonalNeighborOfAnyStone(gx, gy) {
+    const diagDirs = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+    for (const [dx, dy] of diagDirs) {
+      const nx = gx + dx;
+      const ny = gy + dy;
+      if (engine.inBounds(nx, ny) && engine.board[ny][nx] !== EMPTY) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // 播放过关后的棋盘动态后续演示（如门吃、抱吃、扭羊头连续追击，或短暂展示提子/做眼效果后再弹窗）
+  function playPuzzleFollowUpAndComplete(puzzle) {
+    isAnimatingFollowUp = true;
+    const seq = Array.isArray(puzzle.followUpSequence) ? puzzle.followUpSequence : [];
+
+    if (seq.length === 0) {
+      petSpeech.textContent = puzzle.successMsg;
+      const t = setTimeout(() => {
+        isAnimatingFollowUp = false;
+        onPuzzleComplete(puzzle);
+      }, 750);
+      followUpTimers.push(t);
+      return;
+    }
+
+    seq.forEach((step, idx) => {
+      const t = setTimeout(() => {
+        const res = engine.play(step.x, step.y, step.color);
+        if (res.success) {
+          if (res.captures && res.captures.length > 0) {
+            SoundEffects.playCapture();
+          } else {
+            SoundEffects.playStone();
+          }
+        }
+        if (step.speech) {
+          petSpeech.textContent = step.speech;
+        }
+        drawBoard();
+      }, (idx + 1) * 580);
+      followUpTimers.push(t);
+    });
+
+    const finalTimer = setTimeout(() => {
+      isAnimatingFollowUp = false;
+      onPuzzleComplete(puzzle);
+    }, (seq.length + 1) * 580 + 350);
+    followUpTimers.push(finalTimer);
+  }
+
   // 闯关模式点击处理
   function handlePuzzleMove(gx, gy) {
+    if (isAnimatingFollowUp) return;
     const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
 
-    // 类型 A: 识别气或禁着点
-    if (puzzle.type === 'identify_liberties' || puzzle.type === 'identify_suicide') {
+    // 如果当前处于【课前教学演示】阶段，点击棋盘自动推进下一步教学或进入练习
+    if (academySubMode === 'teach') {
+      const steps = puzzle.teachingSteps || [];
+      SoundEffects.playClick();
+      if (currentTeachStepIndex < steps.length - 1) {
+        startTeachingPhase(currentTeachStepIndex + 1);
+      } else {
+        startPracticePhase();
+      }
+      return;
+    }
+
+    // 类型 A1: 识别棋子的气（第1关、第2关）
+    if (puzzle.type === 'identify_liberties') {
+      const key = `${gx},${gy}`;
+      const isTarget = puzzle.targetPoints.some(p => p.x === gx && p.y === gy);
+
+      if (isTarget) {
+        if (puzzleIdentifiedPoints.has(key)) {
+          petSpeech.textContent = "这口气已经找出来标上小绿勾 ✓ 啦！快找找剩下的气吧~";
+          return;
+        }
+        puzzleIdentifiedPoints.add(key);
+        SoundEffects.playStone();
+        drawBoard();
+
+        // 检查是否全部找齐
+        if (puzzleIdentifiedPoints.size === puzzle.targetPoints.length) {
+          playPuzzleFollowUpAndComplete(puzzle);
+        } else {
+          const remain = puzzle.targetPoints.length - puzzleIdentifiedPoints.size;
+          petSpeech.textContent = `找对啦！已找到 ${puzzleIdentifiedPoints.size} 口气，还有 ${remain} 口气，继续加油！`;
+        }
+      } else {
+        SoundEffects.playGentleError();
+        if (engine.board[gy][gx] !== EMPTY) {
+          petSpeech.textContent = "这是棋子自己哦！【气】是跟棋子上下左右紧挨着的空交叉点，请点它身边的空位吧~";
+        } else if (isDiagonalNeighborOfAnyStone(gx, gy)) {
+          petSpeech.textContent = "注意哦！斜着的角没有横竖线直接相连，不算【气】！请点上下左右十字相连的交叉点~";
+        } else {
+          petSpeech.textContent = "唔~ 这个点不是它的气哦，仔细看跟它上下左右直接连着的十字线！";
+        }
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speakError('liberty', petSpeech.textContent);
+        }
+      }
+      return;
+    }
+
+    // 类型 A2: 识别禁着点（第6关）
+    if (puzzle.type === 'identify_suicide') {
       const key = `${gx},${gy}`;
       const isTarget = puzzle.targetPoints.some(p => p.x === gx && p.y === gy);
 
@@ -489,22 +874,31 @@ document.addEventListener('DOMContentLoaded', () => {
         SoundEffects.playStone();
         drawBoard();
 
-        // 检查是否全部找齐
         if (puzzleIdentifiedPoints.size === puzzle.targetPoints.length) {
-          onPuzzleComplete(puzzle);
+          playPuzzleFollowUpAndComplete(puzzle);
         }
       } else {
         SoundEffects.playGentleError();
-        petSpeech.textContent = "唔~ 这个点不是它的气哦，仔细看跟它直接连着的线！";
+        if (engine.board[gy][gx] !== EMPTY) {
+          petSpeech.textContent = "这是白棋的棋子哦！请找一找被白棋四面围住、黑棋不能下的空交叉点（禁着点）~";
+        } else {
+          petSpeech.textContent = "这里黑棋落子后还有气，是可以安全下子的地方哦！请找一找被四颗白棋堵在正中间、0口气的【禁着点】吧~";
+        }
         if (VoiceNarrator.isEnabled()) {
-          VoiceNarrator.speakError('liberty', petSpeech.textContent);
+          VoiceNarrator.speak(petSpeech.textContent, false);
         }
       }
       return;
     }
 
-    // 类型 B: 实战落子（打吃、提子、逃跑、两眼做活等）
+    // 类型 B: 实战落子（打吃、提子、逃跑、门吃、抱吃、两眼做活、扭羊头等）
     if (puzzle.type === 'play_move') {
+      if (engine.board[gy][gx] !== EMPTY) {
+        SoundEffects.playGentleError();
+        petSpeech.textContent = "这里已经有棋子啦，请下在空的交叉点上哦！";
+        return;
+      }
+
       const isCorrect = puzzle.validMoves.some(m => m.x === gx && m.y === gy);
       if (isCorrect) {
         const res = engine.play(gx, gy, puzzle.playerColor);
@@ -515,13 +909,27 @@ document.addEventListener('DOMContentLoaded', () => {
             SoundEffects.playStone();
           }
           drawBoard();
-          onPuzzleComplete(puzzle);
+          playPuzzleFollowUpAndComplete(puzzle);
         }
       } else {
         SoundEffects.playGentleError();
-        petSpeech.textContent = "这一步没有达到效果呢，再想想提示，加油！";
-        if (VoiceNarrator.isEnabled()) {
-          VoiceNarrator.speakError('goal', petSpeech.textContent);
+        const coordKey = `${gx},${gy}`;
+        const customHint = puzzle.wrongMoveHints && puzzle.wrongMoveHints[coordKey];
+        if (customHint) {
+          petSpeech.textContent = customHint;
+          if (VoiceNarrator.isEnabled()) {
+            VoiceNarrator.speak(customHint, false);
+          }
+        } else {
+          const test = engine.testMove(gx, gy, puzzle.playerColor);
+          if (!test.valid) {
+            petSpeech.textContent = `这里不能下哦：${test.reason}`;
+          } else {
+            petSpeech.textContent = "这一步没有达到最佳效果呢，可以点【📖 再看教学】复习一下技巧哦！";
+          }
+          if (VoiceNarrator.isEnabled()) {
+            VoiceNarrator.speakError('goal', petSpeech.textContent);
+          }
         }
       }
     }
@@ -535,14 +943,11 @@ document.addEventListener('DOMContentLoaded', () => {
       VoiceNarrator.speakSuccess(puzzle.id, puzzle.voiceSuccess || puzzle.successMsg);
     }
 
-    // 记录通关关卡与解锁下一关（确保第10关以及全关卡均能点亮星星和通关标识）
+    // 仅将真正完成判题过关的关卡 ID 计入 passedPuzzles（修复未通关关卡提前带星标的 Bug）
     if (!userProgress.passedPuzzles.includes(puzzle.id)) {
       userProgress.passedPuzzles.push(puzzle.id);
     }
     const nextId = puzzle.id + 1;
-    if (!userProgress.passedPuzzles.includes(nextId) && nextId <= PUZZLE_LEVELS.length) {
-      userProgress.passedPuzzles.push(nextId);
-    }
     if (!userProgress.unlockedBadges.includes(puzzle.badge)) {
       userProgress.unlockedBadges.push(puzzle.badge);
     }
@@ -776,40 +1181,287 @@ document.addEventListener('DOMContentLoaded', () => {
     victoryModal.classList.add('show');
   }
 
-  // 加载指定关卡
-  function loadPuzzle(index) {
+  // 隐藏试题标准答案面版与棋盘高亮
+  function hidePuzzleAnswer() {
+    showPuzzleAnswer = false;
+    if (answerRevealBox) answerRevealBox.style.display = 'none';
+    if (btnInlineShowAnswer) {
+      btnInlineShowAnswer.classList.remove('active');
+      btnInlineShowAnswer.textContent = '💡 显示答案';
+    }
+    if (btnShowAnswerText) {
+      btnShowAnswerText.textContent = '💡 显示本题答案';
+    }
+  }
+
+  // 生成当前关卡的标准答案文字与语音详解
+  function getPuzzleAnswerDetails(puzzle) {
+    if (!puzzle) return { html: '', speech: '' };
+    const formatPt = (p) => `<strong>第 ${p.x + 1} 列、第 ${p.y + 1} 行</strong>`;
+    const formatPtSpeech = (p) => `第${p.x + 1}列第${p.y + 1}行`;
+
+    if (puzzle.type === 'identify_liberties') {
+      const pts = puzzle.targetPoints || [];
+      const coordsHtml = pts.map((p, i) => `★${i + 1}（${formatPt(p)}）`).join('、');
+      const coordsSpeech = pts.map((p) => formatPtSpeech(p)).join('，和');
+      return {
+        html: `<strong>💡 标准答案（共 ${pts.length} 口气）：</strong>请依次点击棋盘上金色星标位置：${coordsHtml}。<br><span style="color:#92400e;">📖 答案解析：${puzzle.successMsg}</span>`,
+        speech: `本题标准答案共有${pts.length}口气，分别在${coordsSpeech}。已在棋盘上用金色五角星标出啦！`
+      };
+    }
+
+    if (puzzle.type === 'identify_suicide') {
+      const pts = puzzle.targetPoints || [];
+      const p = pts[0] || { x: 2, y: 2 };
+      return {
+        html: `<strong>💡 标准答案（禁着点）：</strong>点击白棋包围圈正中心的 <strong>★禁（${formatPt(p)}）</strong>。<br><span style="color:#92400e;">📖 答案解析：该点四周全是白子，落子后0口气且不能提掉白子，属于违规禁着点。</span>`,
+        speech: `本题标准答案在${formatPtSpeech(p)}，也就是白棋包围圈正中间的星标位置。`
+      };
+    }
+
+    // play_move
+    const moves = puzzle.validMoves || [];
+    const coordsHtml = moves.map((p, i) => (moves.length > 1 ? `★${i + 1}（${formatPt(p)}）` : `★正解（${formatPt(p)}）`)).join(' 或 ');
+    const coordsSpeech = moves.map((p) => formatPtSpeech(p)).join('或者');
+    let seqNote = '';
+    if (Array.isArray(puzzle.followUpSequence) && puzzle.followUpSequence.length > 0) {
+      const seqStr = puzzle.followUpSequence
+        .map((s, i) => `${i + 2}${s.color === BLACK ? '黑' : '白'}(${s.x + 1},${s.y + 1})`)
+        .join(' → ');
+      seqNote = `<br><span style="color:#b45309;">🔄 后续连招演示：第1手正解后 → ${seqStr}</span>`;
+    }
+    return {
+      html: `<strong>💡 标准答案（黑先正解）：</strong>请落子在棋盘金色星标处：${coordsHtml}。${seqNote}<br><span style="color:#92400e;">📖 答案解析：${puzzle.successMsg}</span>`,
+      speech: `本题标准答案：黑棋下在${coordsSpeech}。${puzzle.successMsg}`
+    };
+  }
+
+  // 切换显示/隐藏本题标准答案
+  function togglePuzzleAnswer() {
+    SoundEffects.playClick();
+    if (currentMode !== 'academy') return;
+
+    if (showPuzzleAnswer) {
+      hidePuzzleAnswer();
+      drawBoard();
+      return;
+    }
+
+    // 如果当前还在“课前教学”分步图，先自动切到练习盘面再标出本题正解
+    if (academySubMode === 'teach') {
+      startPracticePhase(true);
+    }
+
+    showPuzzleAnswer = true;
+    const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
+    const details = getPuzzleAnswerDetails(puzzle);
+
+    if (answerRevealText) {
+      answerRevealText.innerHTML = details.html;
+    }
+    if (answerRevealBox) {
+      answerRevealBox.style.display = 'flex';
+    }
+    if (btnInlineShowAnswer) {
+      btnInlineShowAnswer.classList.add('active');
+      btnInlineShowAnswer.textContent = '🙈 隐藏答案';
+    }
+    if (btnShowAnswerText) {
+      btnShowAnswerText.textContent = '🙈 隐藏本题答案';
+    }
+
+    petSpeech.textContent = `💡 已为你标出第 ${puzzle.id} 关的标准答案星标！你可以跟着金星自己点，也可以点「✨ 自动演示正解」哦！`;
+    drawBoard();
+    VoiceNarrator.speak(details.speech, true);
+  }
+
+  // 一键在棋盘上自动走子演示本题标准答案
+  function autoPlayPuzzleAnswer() {
+    SoundEffects.playClick();
+    if (currentMode !== 'academy') return;
+    const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
+    if (!puzzle) return;
+
+    // 先重置到干净的练习棋盘，但保留答案面板展示
+    startPracticePhase(true);
+    showPuzzleAnswer = true;
+    const details = getPuzzleAnswerDetails(puzzle);
+    if (answerRevealText) answerRevealText.innerHTML = details.html;
+    if (answerRevealBox) answerRevealBox.style.display = 'flex';
+    if (btnInlineShowAnswer) {
+      btnInlineShowAnswer.classList.add('active');
+      btnInlineShowAnswer.textContent = '🙈 隐藏答案';
+    }
+    if (btnShowAnswerText) {
+      btnShowAnswerText.textContent = '🙈 隐藏本题答案';
+    }
+    drawBoard();
+
+    if (puzzle.type === 'identify_liberties' || puzzle.type === 'identify_suicide') {
+      const pts = puzzle.targetPoints || [];
+      pts.forEach((pt, idx) => {
+        const t = setTimeout(() => {
+          if (currentMode !== 'academy') return;
+          handlePuzzleMove(pt.x, pt.y);
+        }, (idx + 1) * 480);
+        followUpTimers.push(t);
+      });
+    } else if (puzzle.type === 'play_move') {
+      const mv = (puzzle.validMoves && puzzle.validMoves[0]) || null;
+      if (mv) {
+        const t = setTimeout(() => {
+          if (currentMode !== 'academy') return;
+          handlePuzzleMove(mv.x, mv.y);
+        }, 420);
+        followUpTimers.push(t);
+      }
+    }
+  }
+
+  // 进入当前关卡的【课前分步教学演示】阶段
+  function startTeachingPhase(stepIndex = 0) {
     clearAITimer();
     clearHint();
-    if (scoreBox) scoreBox.style.display = 'none';
-    currentPuzzleIndex = index;
-    const puzzle = PUZZLE_LEVELS[index];
+    clearFollowUpTimers();
+    hidePuzzleAnswer();
+    const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
+    const steps = puzzle.teachingSteps || [];
+    if (steps.length === 0) {
+      startPracticePhase();
+      return;
+    }
+
+    academySubMode = 'teach';
+    currentTeachStepIndex = Math.max(0, Math.min(stepIndex, steps.length - 1));
+    const step = steps[currentTeachStepIndex];
+    puzzleIdentifiedPoints.clear();
+
+    engine.loadBoard(step.board || puzzle.initialBoard, puzzle.playerColor);
+
+    if (instructionBox) {
+      instructionBox.classList.add('mode-teach');
+      instructionBox.classList.remove('mode-practice');
+    }
+    if (btnPhaseTeach) btnPhaseTeach.classList.add('active');
+    if (btnPhasePractice) btnPhasePractice.classList.remove('active');
+    if (teachingStepBadge) {
+      teachingStepBadge.textContent = `📖 课前教学 ${currentTeachStepIndex + 1} / ${steps.length}`;
+    }
+    if (teachingNavBar) teachingNavBar.style.display = 'flex';
+    if (btnPrevTeachStep) btnPrevTeachStep.disabled = currentTeachStepIndex === 0;
+
+    const isLastStep = currentTeachStepIndex === steps.length - 1;
+    if (btnNextTeachStep) btnNextTeachStep.style.display = isLastStep ? 'none' : 'inline-flex';
+    if (btnStartPracticeNow) btnStartPracticeNow.style.display = isLastStep ? 'inline-flex' : 'none';
+
+    if (teachingDots) {
+      teachingDots.innerHTML = '';
+      steps.forEach((_, idx) => {
+        const dot = document.createElement('span');
+        dot.className = `teaching-dot ${idx === currentTeachStepIndex ? 'active' : ''}`;
+        dot.onclick = () => {
+          SoundEffects.playClick();
+          startTeachingPhase(idx);
+        };
+        teachingDots.appendChild(dot);
+      });
+    }
+
+    if (btnQuickTogglePhase) {
+      btnQuickTogglePhase.textContent = '🎯 直接去练习';
+    }
+    if (voiceBtnText && !VoiceNarrator.isSpeakingNow()) {
+      voiceBtnText.textContent = '听师傅讲课';
+    }
+
+    puzzleInstruction.innerHTML = `<strong>📖 ${puzzle.title} · 教学第 ${currentTeachStepIndex + 1}/${steps.length} 步：${step.title}</strong><br>${step.text}`;
+    petSpeech.textContent = `${step.title}：${step.text}（点击棋盘或下一步继续）`;
+
+    renderLevelChips();
+    resizeCanvas();
+
+    VoiceNarrator.speak(step.voice || step.text, false);
+  }
+
+  // 进入当前关卡的【动手闯关练习】阶段
+  function startPracticePhase(suppressVoice = false) {
+    clearAITimer();
+    clearHint();
+    clearFollowUpTimers();
+    hidePuzzleAnswer();
+    const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
+    academySubMode = 'practice';
     puzzleIdentifiedPoints.clear();
 
     engine.loadBoard(puzzle.initialBoard, puzzle.playerColor);
-    puzzleInstruction.innerHTML = `<strong>${puzzle.title}</strong><br>${puzzle.tip}`;
+
+    if (instructionBox) {
+      instructionBox.classList.remove('mode-teach');
+      instructionBox.classList.add('mode-practice');
+    }
+    if (btnPhaseTeach) btnPhaseTeach.classList.remove('active');
+    if (btnPhasePractice) btnPhasePractice.classList.add('active');
+    if (teachingStepBadge) {
+      teachingStepBadge.textContent = '🎯 动手闯关练习';
+    }
+    if (teachingNavBar) teachingNavBar.style.display = 'none';
+    if (btnQuickTogglePhase) {
+      btnQuickTogglePhase.textContent = '📖 再看教学';
+    }
+    if (voiceBtnText && !VoiceNarrator.isSpeakingNow()) {
+      voiceBtnText.textContent = '听师傅读题';
+    }
+
+    puzzleInstruction.innerHTML = `<strong>🎯 动手练习 · ${puzzle.title}</strong><br>${puzzle.tip}`;
     petSpeech.textContent = puzzle.tip;
 
     renderLevelChips();
     resizeCanvas();
 
     // 自动为小朋友语音朗读题目要求（非手动强制，遵循自动朗读设置）
-    VoiceNarrator.speakPuzzle(puzzle.id, puzzle.voiceTip || puzzle.tip, false);
+    if (!suppressVoice) {
+      VoiceNarrator.speakPuzzle(puzzle.id, puzzle.voiceTip || puzzle.tip, false);
+    }
   }
 
-  // 渲染关卡选项卡
+  // 加载指定关卡（默认先进入课前详细教学环节，实现“先学后练”）
+  function loadPuzzle(index, startInPractice = false) {
+    clearAITimer();
+    clearHint();
+    clearFollowUpTimers();
+    if (scoreBox) scoreBox.style.display = 'none';
+    currentPuzzleIndex = index;
+    const puzzle = PUZZLE_LEVELS[index];
+
+    if (!startInPractice && puzzle.teachingSteps && puzzle.teachingSteps.length > 0) {
+      startTeachingPhase(0);
+    } else {
+      startPracticePhase();
+    }
+  }
+
+  // 渲染关卡选项卡（切换关卡时自动将当前关卡胶囊滚动到可视区域中央，方便小屏 iPad 触控）
   function renderLevelChips() {
     levelChipsContainer.innerHTML = '';
+    let activeChipEl = null;
     PUZZLE_LEVELS.forEach((p, idx) => {
       const chip = document.createElement('div');
-      const isPassed = userProgress.passedPuzzles.includes(p.id) || userProgress.passedPuzzles.includes(p.id + 1);
-      chip.className = `level-chip ${idx === currentPuzzleIndex ? 'active' : ''} ${isPassed ? 'passed' : ''}`;
+      const isPassed = userProgress.passedPuzzles.includes(p.id);
+      const isActive = idx === currentPuzzleIndex;
+      chip.className = `level-chip ${isActive ? 'active' : ''} ${isPassed ? 'passed' : ''}`;
       chip.textContent = `${idx + 1}. ${p.category}`;
       chip.onclick = () => {
         SoundEffects.playClick();
         loadPuzzle(idx);
       };
+      if (isActive) activeChipEl = chip;
       levelChipsContainer.appendChild(chip);
     });
+    if (activeChipEl && typeof activeChipEl.scrollIntoView === 'function') {
+      requestAnimationFrame(() => {
+        activeChipEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      });
+    }
   }
 
   // 渲染荣誉徽章
@@ -848,6 +1500,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetMatch() {
     clearAITimer();
     clearHint();
+    clearFollowUpTimers();
     const size = parseInt(selectBoardSize.value, 10);
     engine.reset(size);
     isAITurn = false;
@@ -859,6 +1512,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function initMatchView() {
     clearAITimer();
     clearHint();
+    clearFollowUpTimers();
     currentMode = 'match';
     if (scoreBox) scoreBox.style.display = 'flex';
     updatePetCard();
@@ -871,12 +1525,13 @@ document.addEventListener('DOMContentLoaded', () => {
     VoiceNarrator.stop();
     clearAITimer();
     clearHint();
+    clearFollowUpTimers();
     tabAcademy.classList.add('active');
     tabMatch.classList.remove('active');
     tabBadges.classList.remove('active');
     viewAcademy.classList.add('active');
     viewBadges.classList.remove('active');
-    gameLayout.style.display = 'flex';
+    gameLayout.style.display = '';
     if (scoreBox) scoreBox.style.display = 'none';
     academyControls.style.display = 'block';
     matchControls.style.display = 'none';
@@ -892,12 +1547,13 @@ document.addEventListener('DOMContentLoaded', () => {
     VoiceNarrator.stop();
     clearAITimer();
     clearHint();
+    clearFollowUpTimers();
     tabMatch.classList.add('active');
     tabAcademy.classList.remove('active');
     tabBadges.classList.remove('active');
     viewAcademy.classList.remove('active');
     viewBadges.classList.remove('active');
-    gameLayout.style.display = 'flex';
+    gameLayout.style.display = '';
     if (scoreBox) scoreBox.style.display = 'flex';
     academyControls.style.display = 'none';
     matchControls.style.display = 'flex';
@@ -909,6 +1565,7 @@ document.addEventListener('DOMContentLoaded', () => {
     VoiceNarrator.stop();
     clearAITimer();
     clearHint();
+    clearFollowUpTimers();
     tabBadges.classList.add('active');
     tabAcademy.classList.remove('active');
     tabMatch.classList.remove('active');
@@ -1009,10 +1666,91 @@ document.addEventListener('DOMContentLoaded', () => {
     resetMatch();
   };
 
-  // 闯关重置本题
+  // 课前教学与练习阶段切换按钮绑定
+  if (btnPhaseTeach) {
+    btnPhaseTeach.onclick = () => {
+      SoundEffects.playClick();
+      startTeachingPhase(0);
+    };
+  }
+
+  if (btnPhasePractice) {
+    btnPhasePractice.onclick = () => {
+      SoundEffects.playClick();
+      startPracticePhase();
+    };
+  }
+
+  if (btnPrevTeachStep) {
+    btnPrevTeachStep.onclick = () => {
+      SoundEffects.playClick();
+      if (currentTeachStepIndex > 0) {
+        startTeachingPhase(currentTeachStepIndex - 1);
+      }
+    };
+  }
+
+  if (btnNextTeachStep) {
+    btnNextTeachStep.onclick = () => {
+      SoundEffects.playClick();
+      const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
+      const steps = puzzle.teachingSteps || [];
+      if (currentTeachStepIndex < steps.length - 1) {
+        startTeachingPhase(currentTeachStepIndex + 1);
+      } else {
+        startPracticePhase();
+      }
+    };
+  }
+
+  if (btnStartPracticeNow) {
+    btnStartPracticeNow.onclick = () => {
+      SoundEffects.playClick();
+      startPracticePhase();
+    };
+  }
+
+  if (btnQuickTogglePhase) {
+    btnQuickTogglePhase.onclick = () => {
+      SoundEffects.playClick();
+      if (academySubMode === 'teach') {
+        startPracticePhase();
+      } else {
+        startTeachingPhase(0);
+      }
+    };
+  }
+
+  if (btnReplayTeach) {
+    btnReplayTeach.onclick = () => {
+      SoundEffects.playClick();
+      startTeachingPhase(0);
+    };
+  }
+
+  // 显示/隐藏本题标准答案按钮
+  if (btnShowAnswer) {
+    btnShowAnswer.onclick = () => {
+      togglePuzzleAnswer();
+    };
+  }
+
+  if (btnInlineShowAnswer) {
+    btnInlineShowAnswer.onclick = () => {
+      togglePuzzleAnswer();
+    };
+  }
+
+  if (btnAutoPlayAnswer) {
+    btnAutoPlayAnswer.onclick = () => {
+      autoPlayPuzzleAnswer();
+    };
+  }
+
+  // 闯关重置本题（重置当前练习盘面）
   btnResetPuzzle.onclick = () => {
     SoundEffects.playClick();
-    loadPuzzle(currentPuzzleIndex);
+    startPracticePhase();
   };
 
   // 闯关下一题
@@ -1023,22 +1761,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 听师傅读题按钮 (专门为不识字的小朋友设计，手动点击始终朗读，不被自动朗读开关屏蔽)
+  // 听师傅讲课/读题按钮 (专门为不识字的小朋友设计，手动点击始终朗读，不被自动朗读开关屏蔽)
   if (btnSpeakInstruction) {
     btnSpeakInstruction.onclick = () => {
       SoundEffects.playClick();
       const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
-      VoiceNarrator.speakPuzzle(puzzle.id, puzzle.voiceTip || puzzle.tip, true);
+      if (academySubMode === 'teach' && puzzle.teachingSteps && puzzle.teachingSteps[currentTeachStepIndex]) {
+        const step = puzzle.teachingSteps[currentTeachStepIndex];
+        VoiceNarrator.speak(step.voice || step.text, true);
+      } else {
+        VoiceNarrator.speakPuzzle(puzzle.id, puzzle.voiceTip || puzzle.tip, true);
+      }
     };
   }
 
-  // 配音角色音色切换（试听当前关卡题目）
+  // 配音角色音色切换（试听当前教学或关卡题目）
   if (selectVoicePack) {
     selectVoicePack.onchange = (e) => {
       SoundEffects.playClick();
       VoiceNarrator.setVoicePack(e.target.value);
       const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
-      VoiceNarrator.speakPuzzle(puzzle.id, puzzle.voiceTip || puzzle.tip, true);
+      if (academySubMode === 'teach' && puzzle.teachingSteps && puzzle.teachingSteps[currentTeachStepIndex]) {
+        const step = puzzle.teachingSteps[currentTeachStepIndex];
+        VoiceNarrator.speak(step.voice || step.text, true);
+      } else {
+        VoiceNarrator.speakPuzzle(puzzle.id, puzzle.voiceTip || puzzle.tip, true);
+      }
     };
   }
 
@@ -1115,7 +1863,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const unlockVoiceOnFirstTouch = (e) => {
     if (firstTouchUnlocked) return;
     firstTouchUnlocked = true;
-    // 如果点击的不是朗读按钮本身，且当前正在闯关界面但尚未发声，则在首次点击时友好播报题目
     const target = e.target;
     const clickedVoiceControl =
       target &&
@@ -1124,7 +1871,12 @@ document.addEventListener('DOMContentLoaded', () => {
        target.closest('#toggleVoice'));
     if (!clickedVoiceControl && currentMode === 'academy' && VoiceNarrator.isEnabled() && !VoiceNarrator.isSpeakingNow()) {
       const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
-      VoiceNarrator.speakPuzzle(puzzle.id, puzzle.voiceTip || puzzle.tip, false);
+      if (academySubMode === 'teach' && puzzle.teachingSteps && puzzle.teachingSteps[currentTeachStepIndex]) {
+        const step = puzzle.teachingSteps[currentTeachStepIndex];
+        VoiceNarrator.speak(step.voice || step.text, false);
+      } else {
+        VoiceNarrator.speakPuzzle(puzzle.id, puzzle.voiceTip || puzzle.tip, false);
+      }
     }
   };
   window.addEventListener('pointerdown', unlockVoiceOnFirstTouch, { once: true });
