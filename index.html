@@ -47,78 +47,25 @@
 
   <main class="main-container">
     
-    <!-- 1. 基础知识闯关练习视图（关卡导航） -->
+    <!-- 1. 基础知识闯关：紧凑关卡选择与语音栏 -->
     <section class="view-section active" id="viewAcademy">
       <div class="level-selector-card">
         <div class="level-header-row">
           <span class="level-title-large">🌟 趣味知识闯关</span>
-          <span style="font-size: 13px; color: #ff6b81; font-weight: bold;">循序渐进 · 快乐启蒙</span>
-        </div>
-        <div class="level-chips-scroll" id="levelChipsContainer">
-          <!-- 动态生成关卡标签 -->
-        </div>
-      </div>
-
-      <div class="instruction-box" id="instructionBox">
-        <!-- 先学后练：双阶段切换栏 -->
-        <div class="academy-phase-bar">
-          <div class="phase-tabs">
-            <button class="phase-pill active" id="btnPhaseTeach">
-              <span>📖</span> 1. 熊猫小课堂 (先看教学)
-            </button>
-            <button class="phase-pill" id="btnPhasePractice">
-              <span>🎯</span> 2. 动手闯关练习
-            </button>
-          </div>
-          <span class="phase-step-badge" id="teachingStepBadge">教学演示 1/2</span>
-        </div>
-
-        <!-- 题目/教学主文案区 -->
-        <div id="puzzleInstruction">加载关卡中...</div>
-
-        <!-- 试题答案与解析展示框（点击“显示答案”后展开） -->
-        <div class="answer-reveal-box" id="answerRevealBox" style="display: none;">
-          <div class="answer-reveal-content" id="answerRevealText"></div>
-          <button class="btn-auto-solve" id="btnAutoPlayAnswer" title="让熊猫师傅在棋盘上自动演示一遍正确答案">
-            ✨ 自动演示正解
-          </button>
-        </div>
-
-        <!-- 课前分步教学专属导航条（仅在教学阶段显示） -->
-        <div class="teaching-nav-bar" id="teachingNavBar">
-          <button class="btn-teach-nav" id="btnPrevTeachStep">
-            ⬅️ 上一步
-          </button>
-          <div class="teaching-dots" id="teachingDots"></div>
-          <button class="btn-teach-nav btn-teach-next" id="btnNextTeachStep">
-            下一步演示 ➡️
-          </button>
-          <button class="btn-teach-nav btn-teach-start" id="btnStartPracticeNow" style="display: none;">
-            🎯 我学会啦，开始闯关！
-          </button>
-        </div>
-
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-top: 4px; border-top: 1px dashed rgba(255, 165, 2, 0.35);">
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <div class="voice-toolbar">
             <button class="voice-btn" id="btnSpeakInstruction">
-              <span class="voice-icon">📢</span> <span id="voiceBtnText">听师傅讲课</span>
+              <span class="voice-icon">📢</span> <span id="voiceBtnText">听师傅读题</span>
             </button>
-            <button class="btn-skip-teach" id="btnQuickTogglePhase">
-              🎯 直接去练习
-            </button>
-            <button class="btn-answer-pill" id="btnInlineShowAnswer">
-              💡 显示答案
-            </button>
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: bold; color: #747d8c;">
-            <span>配音音色:</span>
-            <select id="selectVoicePack" style="padding: 6px 12px; border-radius: 14px; border: 2px solid #ffd591; background: #fff; font-weight: 700; color: #2d3436; cursor: pointer;">
-              <option value="xiaoxiao" selected>🌟 晓晓老师 · 温暖少儿故事 (Neural 真人感)</option>
-              <option value="xiaoyi">👧 晓伊姐姐 · 甜美动漫萌音 (Neural)</option>
-              <option value="yunxia">👦 云夏弟弟 · 活泼正太童声 (Neural)</option>
-              <option value="yunxi">🐼 云希哥哥 · 阳光熊猫师傅 (Neural)</option>
+            <select id="selectVoicePack" class="voice-pack-select" title="切换配音老师">
+              <option value="xiaoxiao" selected>🌟 晓晓老师 (温暖故事音)</option>
+              <option value="xiaoyi">👧 晓伊姐姐 (甜美萌音)</option>
+              <option value="yunxia">👦 云夏弟弟 (活泼童声)</option>
+              <option value="yunxi">🐼 云希哥哥 (阳光导师)</option>
             </select>
           </div>
+        </div>
+        <div class="level-chips-scroll" id="levelChipsContainer">
+          <!-- 动态生成 1~10 关卡胶囊 -->
         </div>
       </div>
     </section>
@@ -139,17 +86,32 @@
     <!-- 核心棋盘与操作区 -->
     <div class="game-layout" id="gameLayout">
       <div class="board-column">
-        <!-- 萌宠卡片（带自适应段位与实时说话气泡） -->
-        <div class="pet-card">
+        <!-- 二合一「🐼 熊猫导师互动讲堂卡」（集成闯关题目、原理图解切换与答案详解，告别双层重复文本框） -->
+        <div class="pet-card" id="petCard">
           <div class="pet-avatar-wrapper">
             <div class="pet-avatar" id="petAvatar">🐼</div>
           </div>
           <div class="pet-info">
             <div class="pet-name-row">
-              <span class="pet-name" id="petName">熊猫师傅</span>
-              <span class="rank-badge" id="petRank">启蒙导师</span>
+              <div class="pet-title-group">
+                <span class="pet-name" id="petName">熊猫师傅</span>
+                <span class="rank-badge" id="petRank">第1关</span>
+              </div>
+              <!-- 即学即练：一键切换【动手闯关】与【原理图解1/2】 -->
+              <div class="step-pills-bar" id="academyStepPills">
+                <button class="step-pill active" id="btnTabPractice">🎯 动手闯关</button>
+                <button class="step-pill" id="btnTabTeach1">📖 图解1</button>
+                <button class="step-pill" id="btnTabTeach2">📖 图解2</button>
+              </div>
             </div>
             <div class="pet-speech" id="petSpeech">你好呀！欢迎来到围棋世界，让我们开始第一课吧！</div>
+            <!-- 答案解析与自动演示内嵌条（仅在点击“显示答案”时展开，不额外撑开独立弹窗） -->
+            <div class="answer-reveal-box" id="answerRevealBox" style="display: none;">
+              <div class="answer-reveal-content" id="answerRevealText"></div>
+              <button class="btn-auto-solve" id="btnAutoPlayAnswer" title="让熊猫师傅在棋盘上自动走子演示">
+                ✨ 自动走子演示
+              </button>
+            </div>
           </div>
         </div>
 
@@ -182,11 +144,11 @@
           </div>
         </div>
 
-        <!-- 闯关专用控制按钮 -->
+        <!-- 闯关专用控制按钮（4个清爽大按钮，唯一入口不重复） -->
         <div id="academyControls">
           <div class="action-buttons">
             <button class="btn-fun btn-secondary" id="btnReplayTeach">
-              <span>📖</span> 再看教学
+              <span>📖</span> <span id="btnTeachText">看原理图解</span>
             </button>
             <button class="btn-fun btn-primary" id="btnShowAnswer">
               <span>💡</span> <span id="btnShowAnswerText">显示答案</span>

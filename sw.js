@@ -1,13 +1,13 @@
 // sw.js - Service Worker 离线缓存引擎（v3 Neural 神经网络语音升级版）
 
-const CACHE_NAME = 'kids-go-v4-teach-answer';
+const CACHE_NAME = 'kids-go-v5-unified-ui';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './css/style.css',
-  './js/sound.js',
+  './js/audio.js',
   './js/voice.js',
   './js/go-engine.js',
   './js/puzzles.js',
@@ -34,16 +34,16 @@ const BASE_AUDIO_CLIPS = [
   'match_win',
   'match_promote',
   'match_lose',
-  'p1_intro', 'p1_win',
-  'p2_intro', 'p2_win',
-  'p3_intro', 'p3_win',
-  'p4_intro', 'p4_win',
-  'p5_intro', 'p5_win',
-  'p6_intro', 'p6_win',
-  'p7_intro', 'p7_win',
-  'p8_intro', 'p8_win',
-  'p9_intro', 'p9_win',
-  'p10_intro', 'p10_win'
+  'p1_intro', 'p1_win', 'p1_t1', 'p1_t2', 'p1_ans',
+  'p2_intro', 'p2_win', 'p2_t1', 'p2_t2', 'p2_ans',
+  'p3_intro', 'p3_win', 'p3_t1', 'p3_t2', 'p3_ans',
+  'p4_intro', 'p4_win', 'p4_t1', 'p4_t2', 'p4_ans',
+  'p5_intro', 'p5_win', 'p5_t1', 'p5_t2', 'p5_ans',
+  'p6_intro', 'p6_win', 'p6_t1', 'p6_t2', 'p6_ans',
+  'p7_intro', 'p7_win', 'p7_t1', 'p7_t2', 'p7_ans',
+  'p8_intro', 'p8_win', 'p8_t1', 'p8_t2', 'p8_ans',
+  'p9_intro', 'p9_win', 'p9_t1', 'p9_t2', 'p9_ans',
+  'p10_intro', 'p10_win', 'p10_t1', 'p10_t2', 'p10_ans'
 ];
 
 VOICE_PACKS.forEach(pack => {

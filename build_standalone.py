@@ -71,8 +71,8 @@ def build_html_bundle(packs_to_include, bitrate='24k'):
     if len(packs_to_include) == 1:
         html = re.sub(
             r'<select id="selectVoicePack"[^>]*>.*?</select>',
-            '''<select id="selectVoicePack" style="padding: 6px 12px; border-radius: 14px; border: 2px solid #ffd591; background: #fff; font-weight: 700; color: #2d3436; cursor: pointer;">
-              <option value="xiaoxiao" selected>🌟 晓晓老师 · 温暖少儿故事 (离线内嵌)</option>
+            '''<select id="selectVoicePack" class="voice-pack-select" title="切换配音老师">
+              <option value="xiaoxiao" selected>🌟 晓晓老师 (温暖故事音)</option>
             </select>''',
             html,
             flags=re.DOTALL
