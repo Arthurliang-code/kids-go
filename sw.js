@@ -1,6 +1,6 @@
 // sw.js - Service Worker 离线缓存引擎（v3 Neural 神经网络语音升级版）
 
-const CACHE_NAME = 'kids-go-v5-unified-ui';
+const CACHE_NAME = 'kids-go-v7-intermediate';
 
 const STATIC_ASSETS = [
   './',
@@ -43,7 +43,17 @@ const BASE_AUDIO_CLIPS = [
   'p7_intro', 'p7_win', 'p7_t1', 'p7_t2', 'p7_ans',
   'p8_intro', 'p8_win', 'p8_t1', 'p8_t2', 'p8_ans',
   'p9_intro', 'p9_win', 'p9_t1', 'p9_t2', 'p9_ans',
-  'p10_intro', 'p10_win', 'p10_t1', 'p10_t2', 'p10_ans'
+  'p10_intro', 'p10_win', 'p10_t1', 'p10_t2', 'p10_ans',
+  'p11_intro', 'p11_win', 'p11_t1', 'p11_t2', 'p11_ans',
+  'p12_intro', 'p12_win', 'p12_t1', 'p12_t2', 'p12_ans',
+  'p13_intro', 'p13_win', 'p13_t1', 'p13_t2', 'p13_ans',
+  'p14_intro', 'p14_win', 'p14_t1', 'p14_t2', 'p14_ans',
+  'p15_intro', 'p15_win', 'p15_t1', 'p15_t2', 'p15_ans',
+  'p16_intro', 'p16_win', 'p16_t1', 'p16_t2', 'p16_ans',
+  'p17_intro', 'p17_win', 'p17_t1', 'p17_t2', 'p17_ans',
+  'p18_intro', 'p18_win', 'p18_t1', 'p18_t2', 'p18_ans',
+  'p19_intro', 'p19_win', 'p19_t1', 'p19_t2', 'p19_ans',
+  'p20_intro', 'p20_win', 'p20_t1', 'p20_t2', 'p20_ans'
 ];
 
 VOICE_PACKS.forEach(pack => {

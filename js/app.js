@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const academyControls = document.getElementById('academyControls');
   const matchControls = document.getElementById('matchControls');
   const scoreBox = document.getElementById('scoreBox');
+  const playerSideBlack = document.getElementById('playerSideBlack');
+  const playerSideWhite = document.getElementById('playerSideWhite');
+  const opponentSideName = document.getElementById('opponentSideName');
+  const turnBanner = document.getElementById('turnBanner');
+  const turnBannerStone = document.getElementById('turnBannerStone');
+  const turnBannerText = document.getElementById('turnBannerText');
 
   // 对弈状态与控制
   const petAvatar = document.getElementById('petAvatar');
@@ -36,6 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 闯关相关
   const levelChipsContainer = document.getElementById('levelChipsContainer');
+  const btnStageBeginner = document.getElementById('btnStageBeginner');
+  const btnStageIntermediate = document.getElementById('btnStageIntermediate');
   const petCard = document.getElementById('petCard');
   const academyStepPills = document.getElementById('academyStepPills');
   const btnTabPractice = document.getElementById('btnTabPractice');
@@ -94,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 运行时状态
   let currentMode = 'academy'; // 'academy' | 'match'
   let academySubMode = 'teach'; // 'teach' (课前教学演示) | 'practice' (动手闯关练习)
+  let currentStage = 'beginner'; // 'beginner' (1~10关) | 'intermediate' (11~20关)
   let currentTeachStepIndex = 0;
   let currentPuzzleIndex = 0;
   let puzzleIdentifiedPoints = new Set(); // 答题模式下已点击的点
@@ -104,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let hoverGridCoord = null;
   let hintCoord = null;         // 熊猫支招专属提示坐标
   let hintTimer = null;         // 支招高亮定时器
-  let showLiberties = true;
+  let showLiberties = false;    // 气数与危险预警提示默认关闭，可在侧边栏开关手动开启
   let isAITurn = false;
   let aiTimer = null;           // 托管 AI 延时走子定时器，避免模式切换/悔棋竞态穿透
   let isCaptureGameMode = true; // 初学吃子模式 vs 常规数地模式
@@ -270,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const h = rect.height;
 
     ctx.clearRect(0, 0, w, h);
+    updateTurnIndicator();
 
     // 棋盘格线
     ctx.strokeStyle = '#5a3d1b';
@@ -512,7 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!puzzle) return;
     ctx.save();
 
-    if (puzzle.type === 'identify_liberties' || puzzle.type === 'identify_suicide') {
+    if (puzzle.type === 'identify_liberties' || puzzle.type === 'identify_suicide' || puzzle.type === 'identify_false_eye') {
       const pts = puzzle.targetPoints || [];
       pts.forEach((ptCoord, idx) => {
         const key = `${ptCoord.x},${ptCoord.y}`;
@@ -533,15 +543,18 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.arc(pt.px, pt.py, stoneRadius * 0.54, 0, Math.PI * 2);
         ctx.fillStyle = puzzle.type === 'identify_suicide'
           ? 'rgba(239, 68, 68, 0.94)'
-          : 'rgba(245, 158, 11, 0.95)';
+          : (puzzle.type === 'identify_false_eye' ? 'rgba(234, 88, 12, 0.95)' : 'rgba(245, 158, 11, 0.95)');
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        const label = pts.length > 1 ? `★${idx + 1}` : '★禁';
+        let label = pts.length > 1 ? `★${idx + 1}` : '★正解';
+        if (puzzle.type === 'identify_suicide') label = '★禁';
+        if (puzzle.type === 'identify_false_eye') label = '★假眼';
+
         ctx.fillStyle = '#ffffff';
-        ctx.font = `bold ${Math.max(12, Math.floor(stoneRadius * 0.52))}px sans-serif`;
+        ctx.font = `bold ${Math.max(11, Math.floor(stoneRadius * 0.48))}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(label, pt.px, pt.py);
@@ -889,6 +902,35 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // 类型 A3: 识别假眼（第16关）
+    if (puzzle.type === 'identify_false_eye') {
+      const key = `${gx},${gy}`;
+      const isTarget = puzzle.targetPoints.some(p => p.x === gx && p.y === gy);
+
+      if (isTarget) {
+        puzzleIdentifiedPoints.add(key);
+        SoundEffects.playStone();
+        drawBoard();
+
+        if (puzzleIdentifiedPoints.size === puzzle.targetPoints.length) {
+          playPuzzleFollowUpAndComplete(puzzle);
+        }
+      } else {
+        SoundEffects.playGentleError();
+        if (gx === 0 && gy === 0) {
+          petSpeech.textContent = "这是真正的真眼哦！它的斜角有白棋紧紧保护着，对手永远破不掉。快找找看哪一只是缺少斜角保护的【假眼】吧！";
+        } else if (engine.board[gy][gx] !== EMPTY) {
+          petSpeech.textContent = "这是棋子自己哦！请找找看被白棋围在中间、但斜角被黑棋占领的【假眼】空位吧~";
+        } else {
+          petSpeech.textContent = "这里不是眼位哦！眼位是被白棋包围的空位，请找找看哪只眼是缺少斜角保护的【假眼】吧！";
+        }
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speak(petSpeech.textContent, false);
+        }
+      }
+      return;
+    }
+
     // 类型 B: 实战落子（打吃、提子、逃跑、门吃、抱吃、两眼做活、扭羊头等）
     if (puzzle.type === 'play_move') {
       if (engine.board[gy][gx] !== EMPTY) {
@@ -1159,6 +1201,32 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateScoreDisplay() {
     blackScoreEl.textContent = engine.capturedStones[WHITE]; // 黑棋吃到的白子数
     whiteScoreEl.textContent = engine.capturedStones[BLACK]; // 白棋吃到的黑子数
+    updateTurnIndicator();
+  }
+
+  // 对弈回合指示：高亮当前行棋方阵营卡 + 棋盘上方大横幅
+  function updateTurnIndicator() {
+    const inMatch = currentMode === 'match';
+    if (turnBanner) turnBanner.style.display = inMatch ? 'flex' : 'none';
+    if (!inMatch) return;
+
+    const rank = ai.getCurrentRank();
+    if (opponentSideName) opponentSideName.textContent = `${rank.icon} ${rank.animal}（执白）`;
+
+    const playerTurn = engine.turn === BLACK;
+    if (playerSideBlack) playerSideBlack.classList.toggle('active', playerTurn);
+    if (playerSideWhite) playerSideWhite.classList.toggle('active', !playerTurn);
+
+    if (turnBanner) turnBanner.classList.toggle('opponent', !playerTurn);
+    if (turnBannerStone) {
+      turnBannerStone.classList.toggle('black', playerTurn);
+      turnBannerStone.classList.toggle('white', !playerTurn);
+    }
+    if (turnBannerText) {
+      turnBannerText.textContent = playerTurn
+        ? '👉 轮到你啦！请下黑棋'
+        : `${rank.icon} ${rank.animal}正在思考，下白棋…`;
+    }
   }
 
   function updatePetCard() {
@@ -1207,6 +1275,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const p = pts[0] || { x: 2, y: 2 };
       return {
         html: `<strong>💡 标准答案（禁着点）：</strong>点击白棋包围圈中心 <strong>★禁(${formatPt(p)})</strong>。`,
+        speech: puzzle.answerSpeech || puzzle.successMsg
+      };
+    }
+
+    if (puzzle.type === 'identify_false_eye') {
+      const pts = puzzle.targetPoints || [];
+      const p = pts[0] || { x: 3, y: 3 };
+      return {
+        html: `<strong>💡 标准答案（假眼位置）：</strong>点击缺少斜角保护的 <strong>★假眼(${formatPt(p)})</strong>。`,
         speech: puzzle.answerSpeech || puzzle.successMsg
       };
     }
@@ -1321,7 +1398,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     drawBoard();
 
-    if (puzzle.type === 'identify_liberties' || puzzle.type === 'identify_suicide') {
+    if (puzzle.type === 'identify_liberties' || puzzle.type === 'identify_suicide' || puzzle.type === 'identify_false_eye') {
       const pts = puzzle.targetPoints || [];
       pts.forEach((pt, idx) => {
         const t = setTimeout(() => {
@@ -1405,6 +1482,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // 阶段切换：'beginner' (1~10关) 或 'intermediate' (11~20关)
+  function switchStage(stage, targetIndex = null) {
+    currentStage = stage;
+    if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
+    if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
+
+    if (targetIndex !== null) {
+      loadPuzzle(targetIndex);
+    } else {
+      const minIdx = currentStage === 'beginner' ? 0 : 10;
+      const maxIdx = currentStage === 'beginner' ? 9 : 19;
+      if (currentPuzzleIndex < minIdx || currentPuzzleIndex > maxIdx) {
+        loadPuzzle(minIdx);
+      } else {
+        renderLevelChips();
+      }
+    }
+  }
+
   // 加载指定关卡（默认直接进入可交互的闯关棋盘，告别繁琐的强制翻页 PPT；随时可点上方“图解1/2”查看原理）
   function loadPuzzle(index, startInTeach = false) {
     clearAITimer();
@@ -1412,8 +1508,15 @@ document.addEventListener('DOMContentLoaded', () => {
     clearFollowUpTimers();
     if (scoreBox) scoreBox.style.display = 'none';
     currentPuzzleIndex = index;
-    const puzzle = PUZZLE_LEVELS[index];
 
+    // 自动同步所属阶段（初级 vs 中级）
+    if (index >= 10 && currentStage !== 'intermediate') {
+      currentStage = 'intermediate';
+    } else if (index < 10 && currentStage !== 'beginner') {
+      currentStage = 'beginner';
+    }
+
+    const puzzle = PUZZLE_LEVELS[index];
     if (startInTeach && puzzle.teachingSteps && puzzle.teachingSteps.length > 0) {
       startTeachingPhase(0);
     } else {
@@ -1421,16 +1524,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 渲染关卡选项卡（切换关卡时自动将当前关卡胶囊滚动到可视区域中央，方便小屏 iPad 触控）
+  // 渲染关卡选项卡（根据当前阶段展示 1~10 或 11~20 关，保持界面清爽，方便 iPad 触控）
   function renderLevelChips() {
+    if (!levelChipsContainer) return;
     levelChipsContainer.innerHTML = '';
     let activeChipEl = null;
-    PUZZLE_LEVELS.forEach((p, idx) => {
+
+    if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
+    if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
+
+    const startIdx = currentStage === 'beginner' ? 0 : 10;
+    const endIdx = currentStage === 'beginner' ? 10 : 20;
+    const stagePuzzles = PUZZLE_LEVELS.slice(startIdx, endIdx);
+
+    stagePuzzles.forEach((p, offset) => {
+      const idx = startIdx + offset;
       const chip = document.createElement('div');
       const isPassed = userProgress.passedPuzzles.includes(p.id);
       const isActive = idx === currentPuzzleIndex;
       chip.className = `level-chip ${isActive ? 'active' : ''} ${isPassed ? 'passed' : ''}`;
-      chip.textContent = `${idx + 1}. ${p.category}`;
+      chip.textContent = `${p.id}. ${p.category}`;
       chip.onclick = () => {
         SoundEffects.playClick();
         loadPuzzle(idx);
@@ -1445,7 +1558,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 渲染荣誉徽章
+  // 渲染荣誉徽章（20关对应20枚专属荣誉勋章）
   function renderBadges() {
     const badgeGrid = document.getElementById('badgeGrid');
     if (!badgeGrid) return;
@@ -1460,7 +1573,17 @@ document.addEventListener('DOMContentLoaded', () => {
       { name: "大门守卫", icon: "🚪", desc: "掌握门吃技巧" },
       { name: "爱心怀抱", icon: "🤗", desc: "掌握抱吃技巧" },
       { name: "不败宗师", icon: "🏰", desc: "掌握两眼活棋" },
-      { name: "追击神将", icon: "🐏", desc: "完成扭羊头征子" }
+      { name: "追击神将", icon: "🐏", desc: "完成扭羊头征子" },
+      { name: "双响炮神", icon: "💣", desc: "掌握双打吃手筋" },
+      { name: "天罗地网", icon: "🕸️", desc: "掌握飞枷吃子" },
+      { name: "以退为进", icon: "🪃", desc: "掌握倒扑舍子妙手" },
+      { name: "断路斩将", icon: "⚔️", desc: "掌握接不归战法" },
+      { name: "劈山神斧", icon: "🪓", desc: "掌握挖与夹手筋" },
+      { name: "明察秋毫", icon: "🧐", desc: "准确识别真眼与假眼" },
+      { name: "一击必杀", icon: "🎯", desc: "掌握破眼杀棋急所" },
+      { name: "包子大厨", icon: "🥟", desc: "掌握滚打包收战法" },
+      { name: "和平使者", icon: "🕊️", desc: "领悟双活共生之道" },
+      { name: "金鸡至尊", icon: "👑", desc: "掌握金鸡独立绝技" }
     ];
 
     badgeGrid.innerHTML = '';
@@ -1487,6 +1610,8 @@ document.addEventListener('DOMContentLoaded', () => {
     isAITurn = false;
     updateScoreDisplay();
     updatePetCard();
+    const r = ai.getCurrentRank();
+    petSpeech.textContent = `新对局开始！你执 ⚫黑棋 先下，我（${r.animal}）执 ⚪白棋，加油哦！`;
     resizeCanvas();
   }
 
@@ -1684,6 +1809,21 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         startPracticePhase();
       }
+    };
+  }
+
+  // 阶段切换按钮（启蒙初级 vs 进阶中级）
+  if (btnStageBeginner) {
+    btnStageBeginner.onclick = () => {
+      SoundEffects.playClick();
+      switchStage('beginner');
+    };
+  }
+
+  if (btnStageIntermediate) {
+    btnStageIntermediate.onclick = () => {
+      SoundEffects.playClick();
+      switchStage('intermediate');
     };
   }
 

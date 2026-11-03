@@ -64,6 +64,11 @@
             </select>
           </div>
         </div>
+        <!-- 教学阶段切换：启蒙初级 vs 进阶中级 -->
+        <div class="stage-switcher" id="stageSwitcher">
+          <button class="stage-pill active" id="btnStageBeginner">🌱 启蒙初级 (1~10关)</button>
+          <button class="stage-pill" id="btnStageIntermediate">🔥 进阶中级 (11~20关)</button>
+        </div>
         <div class="level-chips-scroll" id="levelChipsContainer">
           <!-- 动态生成 1~10 关卡胶囊 -->
         </div>
@@ -115,6 +120,12 @@
           </div>
         </div>
 
+        <!-- 对弈回合大横幅（紧贴棋盘上方，一眼看清轮到谁下） -->
+        <div class="turn-banner" id="turnBanner" style="display: none;">
+          <span class="stone-pill turn-stone black" id="turnBannerStone"></span>
+          <span id="turnBannerText">轮到你下黑棋啦！</span>
+        </div>
+
         <!-- 棋盘容器 -->
         <div class="board-wrapper" id="boardWrapper">
           <canvas id="boardCanvas"></canvas>
@@ -125,21 +136,23 @@
 
       <!-- 侧边面板：记分与功能控制 -->
       <div class="side-panel">
-        <!-- 吃子记分板（仅在对弈模式显示） -->
+        <!-- 对弈双方阵营卡（执子归属 + 提子数 + 当前轮到谁，仅在对弈模式显示） -->
         <div class="score-box" id="scoreBox" style="display: none;">
-          <div class="player-score">
-            <span class="stone-pill black"></span>
-            <div>
-              <div class="score-num" id="blackScore" style="color: #2f3542;">0</div>
-              <div class="score-label">小选手提子</div>
+          <div class="player-side" id="playerSideBlack">
+            <span class="turn-flag">👉 轮到你</span>
+            <span class="stone-pill big black"></span>
+            <div class="side-info">
+              <div class="side-name">🧒 我（执黑）</div>
+              <div class="side-caps">提子 <b id="blackScore">0</b></div>
             </div>
           </div>
-          <div style="font-size: 20px; font-weight: 800; color: #ff7675;">VS</div>
-          <div class="player-score">
-            <span class="stone-pill white"></span>
-            <div>
-              <div class="score-num" id="whiteScore" style="color: #57606f;">0</div>
-              <div class="score-label">对手提子</div>
+          <div class="vs-mark">VS</div>
+          <div class="player-side" id="playerSideWhite">
+            <span class="turn-flag">🤔 思考中</span>
+            <span class="stone-pill big white"></span>
+            <div class="side-info">
+              <div class="side-name" id="opponentSideName">🐱 萌宠（执白）</div>
+              <div class="side-caps">提子 <b id="whiteScore">0</b></div>
             </div>
           </div>
         </div>
@@ -203,7 +216,7 @@
         <div class="toggle-row">
           <span>🟢 气数与危险预警提示</span>
           <label class="switch">
-            <input type="checkbox" id="toggleLiberties" checked>
+            <input type="checkbox" id="toggleLiberties">
             <span class="slider"></span>
           </label>
         </div>
