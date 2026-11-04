@@ -246,7 +246,7 @@ body {
 }
 
 .pet-name {
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 800;
   color: #2d3436;
 }
@@ -302,14 +302,45 @@ body {
 }
 
 .pet-speech {
-  font-size: 14px;
+  font-size: 16.5px;
   color: #2f3542;
   background: #f8f9fa;
-  padding: 8px 12px;
-  border-radius: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
   position: relative;
-  line-height: 1.5;
-  border: 1px solid #edf2f7;
+  line-height: 1.58;
+  font-weight: 600;
+  border: 1.5px solid #edf2f7;
+}
+
+/* “先教学再练习”醒目大按钮 */
+.btn-start-practice {
+  margin-top: 8px;
+  width: 100%;
+  background: linear-gradient(135deg, #2ed573, #10b981);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  padding: 13px 18px;
+  border-radius: 18px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(46, 213, 115, 0.4);
+  transition: all 0.2s ease;
+  animation: practicePulse 2.2s infinite ease-in-out;
+}
+
+.btn-start-practice:active {
+  transform: scale(0.98);
+}
+
+@keyframes practicePulse {
+  0%, 100% { box-shadow: 0 4px 14px rgba(46, 213, 115, 0.4); }
+  50% { box-shadow: 0 4px 22px rgba(46, 213, 115, 0.7); transform: translateY(-1px); }
 }
 
 .pet-speech::before {
@@ -402,14 +433,15 @@ body {
 .score-box {
   background: var(--panel-bg);
   border-radius: var(--border-radius-md);
-  padding: 12px;
+  padding: 10px 12px;
   box-shadow: var(--shadow-cartoon);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
   width: 100%;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .player-score {
@@ -436,8 +468,8 @@ body {
 }
 
 .stone-pill.big {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
 }
 
@@ -449,11 +481,11 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 14px 8px 10px;
+  padding: 12px 6px 8px;
   border-radius: 14px;
-  border: 3px solid transparent;
+  border: 2.5px solid transparent;
   background: #f5f6fa;
-  opacity: 0.6;
+  opacity: 0.7;
   transition: all 0.25s ease;
 }
 
@@ -500,19 +532,22 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  overflow: visible;
 }
 
 .side-header {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: nowrap;
 }
 
 .side-name {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
   color: #2f3542;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .side-tag {
@@ -522,6 +557,7 @@ body {
   border-radius: 6px;
   line-height: 1.2;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .side-tag.black-tag {
@@ -539,6 +575,7 @@ body {
   font-size: 12px;
   color: #747d8c;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .side-caps b {
@@ -595,18 +632,20 @@ body {
 }
 
 .btn-fun {
-  padding: 12px 14px;
-  font-size: 15px;
-  font-weight: 700;
+  min-height: 52px;
+  padding: 12px 16px;
+  font-size: 16.5px;
+  font-weight: 800;
   border: none;
-  border-radius: var(--border-radius-md);
+  border-radius: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   box-shadow: 0 5px 0 rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.06);
   transition: all 0.15s ease;
+  user-select: none;
 }
 
 .btn-fun:active {
@@ -958,52 +997,168 @@ input:checked + .slider:before {
   to { transform: scale(1.1); }
 }
 
-/* 勋章馆网格 */
+/* 勋章馆荣誉看板与炫彩进度条 */
+.badge-hero-banner {
+  background: linear-gradient(135deg, #fff9e6 0%, #fff1c7 100%);
+  border: 2px solid #fed330;
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 18px rgba(254, 211, 48, 0.25);
+}
+
+.badge-hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.badge-hero-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-hero-icon {
+  font-size: 26px;
+}
+
+.badge-count-badge {
+  background: #ff9f43;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(255, 159, 67, 0.35);
+}
+
+.badge-highlight-num {
+  font-size: 18px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.badge-hero-subtitle {
+  font-size: 14px;
+  color: #8395a7;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.badge-progress-track {
+  width: 100%;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.badge-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffa502 0%, #2ed573 100%);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
+}
+
+/* 勋章馆网格与卡片 */
 .badge-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
   gap: 14px;
-  padding: 10px 0;
+  padding: 6px 0 16px;
 }
 
 .badge-item {
-  background: #fff;
-  border-radius: var(--border-radius-md);
-  padding: 16px 10px;
+  background: #f8fafc;
+  border-radius: 18px;
+  padding: 16px 12px;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
   border: 2px dashed #dcdde1;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .badge-item.unlocked {
   border-style: solid;
   border-color: #ffa502;
-  background: #fffdf5;
+  background: linear-gradient(145deg, #ffffff, #fffbee);
+  box-shadow: 0 6px 16px rgba(255, 165, 2, 0.22);
+  transform: translateY(-2px);
+}
+
+.badge-item.unlocked:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(255, 165, 2, 0.32);
 }
 
 .badge-icon {
-  font-size: 38px;
-  margin-bottom: 6px;
+  font-size: 42px;
+  margin-bottom: 8px;
   filter: grayscale(100%);
-  opacity: 0.4;
+  opacity: 0.35;
+  transition: all 0.3s ease;
 }
 
 .badge-item.unlocked .badge-icon {
-  filter: none;
+  filter: drop-shadow(0 4px 10px rgba(255, 165, 2, 0.45));
   opacity: 1;
+  animation: badgeGlow 3s infinite alternate;
+}
+
+@keyframes badgeGlow {
+  0% { transform: scale(1); filter: drop-shadow(0 4px 8px rgba(255, 165, 2, 0.4)); }
+  100% { transform: scale(1.08); filter: drop-shadow(0 6px 14px rgba(255, 107, 129, 0.6)); }
 }
 
 .badge-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: #2f3542;
 }
 
 .badge-status {
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 700;
   color: #a4b0be;
-  margin-top: 4px;
+  margin-top: 5px;
+}
+
+.badge-item.unlocked .badge-status {
+  color: #e67e22;
+}
+
+/* 勋章成就解锁喜报模态框 (Celebration) */
+.badge-unlock-card {
+  border: 3px solid #f39c12;
+  background: linear-gradient(180deg, #ffffff 0%, #fffbf0 100%);
+  box-shadow: 0 20px 40px rgba(243, 156, 18, 0.3);
+}
+
+.badge-unlock-emblem {
+  font-size: 68px;
+  margin: 12px 0 8px;
+  filter: drop-shadow(0 8px 16px rgba(243, 156, 18, 0.5));
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.badge-unlock-pill {
+  display: inline-block;
+  background: linear-gradient(135deg, #ff9f43, #ff5252);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 4px 16px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+  box-shadow: 0 3px 8px rgba(255, 82, 82, 0.35);
 }
 
 /* 专为长辈与异地安装设计的醒目按钮与大字引导弹窗 */
@@ -1135,7 +1290,7 @@ input:checked + .slider:before {
   }
 
   #viewAcademy .level-title-large {
-    font-size: 16px;
+    font-size: 19px;
     white-space: nowrap;
   }
 
@@ -1145,8 +1300,8 @@ input:checked + .slider:before {
   }
 
   .level-chip {
-    padding: 6px 12px;
-    font-size: 13px;
+    padding: 7px 14px;
+    font-size: 14px;
   }
 }
 
@@ -1159,25 +1314,26 @@ input:checked + .slider:before {
   }
 
   .pet-card {
-    padding: 10px 14px;
+    padding: 12px 14px;
     gap: 10px;
     max-width: min(490px, 60vw);
     border-radius: 18px;
   }
 
   .pet-avatar {
-    width: 50px;
-    height: 50px;
-    font-size: 34px;
+    width: 52px;
+    height: 52px;
+    font-size: 36px;
   }
 
   .pet-name {
-    font-size: 15px;
+    font-size: 18px;
   }
 
   .pet-speech {
-    font-size: 13px;
-    padding: 7px 10px;
+    font-size: 15.5px;
+    padding: 8px 12px;
+    line-height: 1.5;
   }
 
   .board-wrapper {
@@ -1187,13 +1343,14 @@ input:checked + .slider:before {
   }
 
   .side-panel {
-    width: clamp(220px, 33vw, 260px);
+    width: clamp(270px, 34vw, 300px);
     gap: 10px;
   }
 
   .btn-fun {
-    padding: 10px 10px;
-    font-size: 14px;
+    min-height: 50px;
+    padding: 11px 12px;
+    font-size: 15.5px;
   }
 }
 
@@ -1230,13 +1387,13 @@ input:checked + .slider:before {
   }
 
   .pet-name {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .pet-speech {
-    font-size: 13.5px;
-    padding: 6px 10px;
-    line-height: 1.42;
+    font-size: 15.5px;
+    padding: 8px 12px;
+    line-height: 1.5;
   }
 
   .board-wrapper {
@@ -1247,8 +1404,9 @@ input:checked + .slider:before {
   }
 
   .btn-fun {
+    min-height: 50px;
     padding: 11px 12px;
-    font-size: 14px;
+    font-size: 15.5px;
   }
 }
 
@@ -1340,10 +1498,11 @@ input:checked + .slider:before {
             </select>
           </div>
         </div>
-        <!-- 教学阶段切换：启蒙初级 vs 进阶中级 -->
+        <!-- 教学阶段切换：启蒙初级 vs 进阶中级 vs 神算高级 -->
         <div class="stage-switcher" id="stageSwitcher">
           <button class="stage-pill active" id="btnStageBeginner">🌱 启蒙初级 (1~10关)</button>
           <button class="stage-pill" id="btnStageIntermediate">🔥 进阶中级 (11~20关)</button>
+          <button class="stage-pill" id="btnStageAdvanced">👑 神算高级 (21~30关)</button>
         </div>
         <div class="level-chips-scroll" id="levelChipsContainer">
           <!-- 动态生成 1~10 关卡胶囊 -->
@@ -1354,10 +1513,21 @@ input:checked + .slider:before {
     <!-- 2. 我的勋章视图 -->
     <section class="view-section" id="viewBadges">
       <div class="level-selector-card">
-        <div class="level-header-row">
-          <span class="level-title-large">🏆 围棋小大师勋章馆</span>
+        <div class="badge-hero-banner">
+          <div class="badge-hero-header">
+            <div class="badge-hero-title-group">
+              <span class="badge-hero-icon">🏆</span>
+              <span class="level-title-large">围棋小大师荣誉勋章馆</span>
+            </div>
+            <div class="badge-count-badge">
+              已点亮 <span id="unlockedBadgesCount" class="badge-highlight-num">0</span> / 30 枚
+            </div>
+          </div>
+          <p class="badge-hero-subtitle">挑战知识闯关或段位升级，点亮你的璀璨荣誉之章！</p>
+          <div class="badge-progress-track">
+            <div class="badge-progress-fill" id="badgeProgressBar" style="width: 0%;"></div>
+          </div>
         </div>
-        <p style="font-size: 13px; color: #747d8c; margin-bottom: 12px;">完成知识闯关或在对弈中升级，即可点亮专属勋章！</p>
         <div class="badge-grid" id="badgeGrid">
           <!-- 动态生成勋章卡片 -->
         </div>
@@ -1386,6 +1556,10 @@ input:checked + .slider:before {
               </div>
             </div>
             <div class="pet-speech" id="petSpeech">你好呀！欢迎来到围棋世界，让我们开始第一课吧！</div>
+            <!-- “先教学再练习”核心主按钮：看懂图解后一键切入做题 -->
+            <button class="btn-fun btn-start-practice" id="btnStartPractice" style="display: none;">
+              <span>👉</span> 看明白了，开始动手做题！
+            </button>
             <!-- 答案解析与自动演示内嵌条（仅在点击“显示答案”时展开，不额外撑开独立弹窗） -->
             <div class="answer-reveal-box" id="answerRevealBox" style="display: none;">
               <div class="answer-reveal-content" id="answerRevealText"></div>
@@ -1487,8 +1661,8 @@ input:checked + .slider:before {
           <div class="toggle-row">
             <span>对战玩法</span>
             <select id="selectGameMode" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ddd; font-weight: 700; background: #fff;">
-              <option value="capture" data-target="3" selected>吃子棋 (先吃3子赢)</option>
-              <option value="capture" data-target="5">吃子棋 (先吃5子赢)</option>
+              <option value="capture" data-target="5" selected>吃子棋 (先吃5子赢)</option>
+              <option value="capture" data-target="3">吃子棋 (先吃3子赢)</option>
               <option value="territory">标准围地数子</option>
             </select>
           </div>
@@ -1514,6 +1688,20 @@ input:checked + .slider:before {
       <p class="modal-desc" id="modalDesc">太棒了，你找到了正确的方法！</p>
       <button class="btn-fun btn-primary" id="btnModalAction" style="width: 100%; font-size: 18px; padding: 14px;">
         继续前进！
+      </button>
+    </div>
+  </div>
+
+  <!-- 全屏勋章成就解锁喜报弹窗 (Celebration Modal) -->
+  <div class="modal-overlay" id="badgeModal">
+    <div class="modal-content badge-unlock-card">
+      <div class="star-celebration">✨ 🎖️ 🏆 🎖️ ✨</div>
+      <div class="badge-unlock-emblem" id="badgeModalIcon">🏅</div>
+      <div class="badge-unlock-pill">新荣誉已点亮</div>
+      <h3 class="modal-title" id="badgeModalTitle" style="color: #d35400; font-size: 24px; margin-top: 6px;">获颁专属勋章！</h3>
+      <p class="modal-desc" id="badgeModalDesc" style="font-size: 16px; color: #2f3542; line-height: 1.6;">太棒了，你掌握了新的围棋绝技！</p>
+      <button class="btn-fun btn-green" id="btnBadgeModalConfirm" style="width: 100%; font-size: 18px; padding: 14px; margin-top: 10px;">
+        太棒啦，收入勋章馆！
       </button>
     </div>
   </div>
@@ -1974,7 +2162,7 @@ const VoiceNarrator = (() => {
     }, 60);
   }
 
-  // 通用动态文本朗读
+  // 通用动态文本朗读（离线纯本地优先：直接走浏览器原生 Web Speech 引擎，严禁依赖远程/本地未运行的 /api/tts）
   function speak(text, isManual = false) {
     if (!isManual && !autoEnabled) return;
     if (!text) return;
@@ -1984,47 +2172,7 @@ const VoiceNarrator = (() => {
     const cleanText = text.replace(/<[^>]+>/g, '').replace(/[★*#_`~💡🎉🏆🌿📖🎯✓✗]/g, '').trim();
     if (!cleanText) return;
 
-    // 仅当访问本地 Python TTS 服务端（端口 8088 等）时尝试调用 /api/tts，静态托管或离线直接走兜底
-    const isLocalPythonServer =
-      typeof window !== 'undefined' &&
-      !window.IS_STANDALONE_HTML &&
-      (window.location.protocol === 'http:' || window.location.protocol === 'https:') &&
-      !/github\.io$/i.test(window.location.hostname);
-
-    if (!isLocalPythonServer) {
-      speakWithBrowserTTS(cleanText, myToken);
-      return;
-    }
-
-    const pack = PACK_ALIAS[currentVoicePack] || 'xiaoxiao';
-    const ttsUrl = `/api/tts?voice=${encodeURIComponent(pack)}&text=${encodeURIComponent(cleanText)}`;
-    const audio = new Audio(ttsUrl);
-    currentAudio = audio;
-
-    audio.onplay = () => {
-      if (myToken !== playToken) return;
-      isSpeaking = true;
-      if (onStartCallback) onStartCallback();
-    };
-    audio.onended = () => {
-      if (myToken !== playToken) return;
-      isSpeaking = false;
-      currentAudio = null;
-      if (onEndCallback) onEndCallback();
-    };
-    audio.onerror = () => {
-      if (myToken !== playToken) return;
-      currentAudio = null;
-      isSpeaking = false;
-      speakWithBrowserTTS(cleanText, myToken);
-    };
-
-    audio.play().catch(() => {
-      if (myToken !== playToken) return;
-      currentAudio = null;
-      isSpeaking = false;
-      speakWithBrowserTTS(cleanText, myToken);
-    });
+    speakWithBrowserTTS(cleanText, myToken);
   }
 
   return {
@@ -2061,6 +2209,10 @@ const VoiceNarrator = (() => {
     }
   };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { VoiceNarrator };
+}
 
 
 // ====== js/go-engine.js ======
@@ -2379,9 +2531,19 @@ class GoEngine {
   }
 }
 
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { GoEngine, EMPTY, BLACK, WHITE };
+}
+
 
 // ====== js/puzzles.js ======
 // puzzles.js - 少儿围棋进阶闯关题库（即学即练互动图解、精准棋理判题、错着诊断与动态追击演示）
+
+if (typeof BLACK === 'undefined') {
+  var BLACK = 1;
+  var WHITE = 2;
+  var EMPTY = 0;
+}
 
 const PUZZLE_LEVELS = [
   {
@@ -3768,15 +3930,750 @@ const PUZZLE_LEVELS = [
       "1,0": "自己走到 (1,0) 会被左边白棋立刻吃掉哦！要下在 (2,0) 底线坚决立下，让白棋两边都不能进！",
       "3,0": "自己走到 (3,0) 会被右边白棋立刻吃掉哦！要下在 (2,0) 底线坚决立下，让白棋两边都不能进！"
     },
-    successMsg: "惊世骇俗！终极绝技【金鸡独立】！黑棋一子挺立，两边皆成禁着点，白棋寸步难行，恭喜小大师通关全部20关！",
-    voiceSuccess: "惊世骇俗！终极绝技金鸡独立！两边皆成禁着点，白棋全军覆没！恭喜少儿围棋大宗师，通关全部20关！",
+    successMsg: "惊世骇俗！终极绝技【金鸡独立】！黑棋一子挺立，两边皆成禁着点，白棋寸步难行，恭喜小大师通关第20关，晋级神算高级阶段！",
+    voiceSuccess: "惊世骇俗！终极绝技金鸡独立！两边皆成禁着点，白棋全军覆没！恭喜小大师，顺利进入神算高级关卡！",
     explain: "【金鸡独立】：利用棋盘边界（一线）的特殊几何特性，黑棋立下一子后，对方无论从左侧还是右侧入子均属于没有气且不能提子的“禁着点”（自杀），从而同时瘫痪对方两侧棋子的终极杀气手筋。"
+  },
+  {
+    id: 21,
+    title: "第21关：大眼破眼【丁四点中】",
+    badge: "丁四克星",
+    category: "死活急所",
+    boardSize: 7,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "白棋围出了一个“丁”字形（T形）的4目大眼！黑棋只要抢占丁四正中间的要穴，白棋就再也分不出两个真眼啦！快找出丁字中心点！",
+    voiceTip: "小朋友看！白棋的大眼像一个大写的丁字！丁字大眼只有一个命门，就在丁字的正中间！黑棋抢先点进去，白棋就死翘翘啦！快点进去吧！",
+    answerSpeech: "第21关标准答案：落子在第4列第3行(3,2)！抢占丁四中心要害，白棋无法做活！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：认识丁四",
+        title: "什么是“丁四”？",
+        text: "白棋内部留有 4 个空位（标着①②③④），排布成一个“丁”字形。如果让白棋下在 (3,2)，白棋就能做活成两只眼！",
+        voice: "白棋里面有四个空位，连起来像一个丁字，所以叫丁四！如果让白棋占了中间，白棋就活啦！",
+        board: [
+          [0, 1, 1, 1, 1, 1, 0],
+          [1, 2, 2, 2, 2, 2, 1],
+          [1, 2, 0, 0, 0, 2, 1],
+          [1, 2, 2, 0, 2, 2, 1],
+          [0, 1, 2, 2, 2, 1, 0],
+          [0, 0, 1, 1, 1, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 2, y: 2, text: "1", style: "good" },
+          { x: 3, y: 2, text: "★", style: "good" },
+          { x: 4, y: 2, text: "2", style: "good" },
+          { x: 3, y: 3, text: "3", style: "good" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：占据丁四急所",
+        title: "占据急所，聚杀白棋！",
+        text: "黑棋坚决抢占丁字中心 (3,2)！白棋无论再下哪里，都无法分出两只真眼，丁四被黑棋聚杀！",
+        voice: "黑棋抢占正中间的五角星位置！白棋无论怎么下，都分不出两只眼睛啦！这就是丁四点中！",
+        board: [
+          [0, 1, 1, 1, 1, 1, 0],
+          [1, 2, 2, 2, 2, 2, 1],
+          [1, 2, 0, 1, 0, 2, 1],
+          [1, 2, 2, 0, 2, 2, 1],
+          [0, 1, 2, 2, 2, 1, 0],
+          [0, 0, 1, 1, 1, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 2, text: "中✓", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 1, 1, 1, 1, 1, 0],
+      [1, 2, 2, 2, 2, 2, 1],
+      [1, 2, 0, 0, 0, 2, 1],
+      [1, 2, 2, 0, 2, 2, 1],
+      [0, 1, 2, 2, 2, 1, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0]
+    ],
+    validMoves: [
+      { x: 3, y: 2 }
+    ],
+    wrongMoveHints: {
+      "2,2": "点在边上的空位没打中命门！白棋只要抢占 (3,2) 中心，就能立刻做成两只活眼啦！",
+      "4,2": "点在边上的空位没打中命门！白棋抢占 (3,2) 中心就能分出两只眼做活啦！",
+      "3,3": "点在丁字的尾巴上啦！要点在丁字横竖交叉的正中心 (3,2)！"
+    },
+    successMsg: "神准一击！【丁四点中】！黑棋一子命中丁字大眼正中心，白棋再也无法做出两只真眼，全盘覆没！",
+    voiceSuccess: "太准啦！丁四点中！正中要害，白棋再也做不出两只眼，被你一招点杀！",
+    explain: "【丁四】：由四个空交叉点组成形如“丁”字的大眼。其中心交叉点是唯一的死活急所，黑先点中则白死，白先占据则白活。"
+  },
+  {
+    id: 22,
+    title: "第22关：绝杀大眼【刀把五急所】",
+    badge: "屠龙破刃",
+    category: "死活急所",
+    boardSize: 7,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "围棋中最凶名赫赫的“刀把五”！白棋留有 5 个空位，形状就像一把菜刀！菜刀最脆弱的刀把与刀身连接处就是急所！快下在刀把五要害！",
+    voiceTip: "哇！这是传说中超厉害的刀把五！形状像一把菜刀！黑棋只要刺中刀柄和刀身连接的关键穴位，大白龙就再也活不成啦！",
+    answerSpeech: "第22关标准答案：落子在第4列第3行(3,2)！抢占刀把五中心急所，聚杀白棋！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：认识刀把五",
+        title: "凶名赫赫的“刀把五”",
+        text: "白棋内部留有 5 个空位（标着①②③④⑤）。前 4 个排成方块为刀身，(4,2) 突出为刀把，整把菜刀的要害正在 (3,2)！",
+        voice: "看！白棋里面的五个空位像不像一把菜刀？这叫刀把五！刀身和刀把连接的地方，就是它的命门！",
+        board: [
+          [0, 1, 1, 1, 1, 1, 0],
+          [1, 2, 2, 2, 2, 2, 1],
+          [1, 2, 0, 0, 0, 2, 1],
+          [1, 2, 0, 0, 2, 2, 1],
+          [0, 1, 2, 2, 2, 1, 0],
+          [0, 0, 1, 1, 1, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 2, y: 2, text: "1", style: "good" },
+          { x: 3, y: 2, text: "★", style: "good" },
+          { x: 4, y: 2, text: "把", style: "good" },
+          { x: 2, y: 3, text: "3", style: "good" },
+          { x: 3, y: 3, text: "4", style: "good" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：直刺刀把要害",
+        title: "点中急所，五子聚歼！",
+        text: "黑棋准确点入 (3,2)！白棋无论怎么挣扎，都无法摆出两只真眼，刀把五瞬间化为死形！",
+        voice: "黑棋果断点在刀身与刀把的连接点！刀把五立刻变成死棋，太霸气啦！",
+        board: [
+          [0, 1, 1, 1, 1, 1, 0],
+          [1, 2, 2, 2, 2, 2, 1],
+          [1, 2, 0, 1, 0, 2, 1],
+          [1, 2, 0, 0, 2, 2, 1],
+          [0, 1, 2, 2, 2, 1, 0],
+          [0, 0, 1, 1, 1, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 2, text: "急所✓", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 1, 1, 1, 1, 1, 0],
+      [1, 2, 2, 2, 2, 2, 1],
+      [1, 2, 0, 0, 0, 2, 1],
+      [1, 2, 0, 0, 2, 2, 1],
+      [0, 1, 2, 2, 2, 1, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0]
+    ],
+    validMoves: [
+      { x: 3, y: 2 }
+    ],
+    wrongMoveHints: {
+      "4,2": "下在刀柄上啦！白棋抢占 (3,2) 中心，就能分出两只眼做活啦！必须点在 (3,2)！",
+      "2,2": "下偏啦！刀把五的核心急所在 (3,2)！",
+      "2,3": "下偏啦！刀把五的核心急所在 (3,2)！",
+      "3,3": "下在刀身下沿啦！最关键的枢纽点是 (3,2)！"
+    },
+    successMsg: "霸气屠龙！【刀把五急所】！黑棋一子命中刀把五枢纽，大白龙无法做活，恭喜解锁屠龙破刃勋章！",
+    voiceSuccess: "太厉害啦！刀把五急所！你成功刺中要害，破掉了传说中的刀把五大眼！",
+    explain: "【刀把五】：五目大眼经典死形，形似菜刀。其急所位于刀身与刀把联结的关节点，黑先点中则白死，白先占据则白活。"
+  },
+  {
+    id: 23,
+    title: "第23关：十字大眼【梅花五点心】",
+    badge: "傲雪寒梅",
+    category: "死活急所",
+    boardSize: 7,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "白棋围出了一个形如十字梅花的 5 目大眼！梅花开在正中央，只要占据梅花的花蕊中心点，就能聚杀白棋！快点入花蕊！",
+    voiceTip: "白棋的大眼是一个漂亮的十字梅花！梅花五点花蕊！只要点中最中间的那朵花心，整朵梅花都会变成死棋！快找到中心点吧！",
+    answerSpeech: "第23关标准答案：落子在正中心第4列第4行(3,3)！梅花五点中花蕊，一子点杀！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：认识梅花五",
+        title: "十字形状的“梅花五”",
+        text: "白棋内部由 5 个空位组成十字形，上下左右各有一瓣，中间有一蕊 (3,3)。如果白棋抢到 (3,3)，能轻松做活！",
+        voice: "看棋盘中间，五个空位排成了一个十字形，这就是梅花五！正中央的花心位置，就是白棋的命脉！",
+        board: [
+          [0, 0, 1, 1, 1, 0, 0],
+          [0, 1, 2, 2, 2, 1, 0],
+          [1, 2, 2, 0, 2, 2, 1],
+          [1, 2, 0, 0, 0, 2, 1],
+          [1, 2, 2, 0, 2, 2, 1],
+          [0, 1, 2, 2, 2, 1, 0],
+          [0, 0, 1, 1, 1, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 2, text: "上", style: "good" },
+          { x: 2, y: 3, text: "左", style: "good" },
+          { x: 3, y: 3, text: "★", style: "good" },
+          { x: 4, y: 3, text: "右", style: "good" },
+          { x: 3, y: 4, text: "下", style: "good" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：占据梅花蕊",
+        title: "梅花五点花蕊，中心开花！",
+        text: "黑棋准确点中天元花蕊 (3,3)！白棋无论在上下左右任何一瓣补棋，都无法分隔成两只眼，全军覆没！",
+        voice: "黑棋稳稳点在正中央的花心！梅花五被你一击毙命，白棋成为死棋！太棒啦！",
+        board: [
+          [0, 0, 1, 1, 1, 0, 0],
+          [0, 1, 2, 2, 2, 1, 0],
+          [1, 2, 2, 0, 2, 2, 1],
+          [1, 2, 0, 1, 0, 2, 1],
+          [1, 2, 2, 0, 2, 2, 1],
+          [0, 1, 2, 2, 2, 1, 0],
+          [0, 0, 1, 1, 1, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 3, text: "蕊✓", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 1, 2, 2, 2, 1, 0],
+      [1, 2, 2, 0, 2, 2, 1],
+      [1, 2, 0, 0, 0, 2, 1],
+      [1, 2, 2, 0, 2, 2, 1],
+      [0, 1, 2, 2, 2, 1, 0],
+      [0, 0, 1, 1, 1, 0, 0]
+    ],
+    validMoves: [
+      { x: 3, y: 3 }
+    ],
+    wrongMoveHints: {
+      "3,2": "点在上方花瓣啦！白棋抢占 (3,3) 中心花蕊就活棋啦！一定要点在 (3,3)！",
+      "2,3": "点在左边花瓣啦！花蕊在 (3,3) 正中间！",
+      "4,3": "点在右边花瓣啦！花蕊在 (3,3) 正中间！",
+      "3,4": "点在下方花瓣啦！花蕊在 (3,3) 正中间！"
+    },
+    successMsg: "傲雪凌霜！【梅花五点心】！黑棋一子点杀梅花蕊，白棋十字大眼瞬间化为乌有！",
+    voiceSuccess: "漂亮！梅花五点心！一子命中中心花蕊，白棋全军覆没！",
+    explain: "【梅花五】：呈十字形对称的五目大眼。其对称中心点即为死活急所，黑棋点入中心，白棋即形成死形。"
+  },
+  {
+    id: 24,
+    title: "第24关：包收绝技【乌龟不出头】",
+    badge: "缩头入壳",
+    category: "杀气手筋",
+    boardSize: 7,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "白棋在二路企图伸出“乌龟脑袋”逃跑！黑棋迎头一记“扳”，就像把乌龟的头狠狠按回龟壳里一样！快把白棋挡在二路！",
+    voiceTip: "快看！白棋顺着二路拼命往外伸脑袋想跑！黑棋迎头一扳，像按乌龟脑袋一样把它缩回去！千万别让它跑出来！",
+    answerSpeech: "第24关标准答案：落子在第5列第6行(4,5)！迎头痛击，将白棋堵在龟壳之内！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：白棋企图逃出",
+        title: "白棋沿二路出头逃窜",
+        text: "白棋 3 颗子被困在二路，正企图往 (4,5) 伸头逃命！如果黑棋随手在后面跟着爬，白棋一出头就再也抓不住了！",
+        voice: "白棋正拼命往右边钻，如果黑棋在后面慢吞吞跟着爬，白棋脑袋一伸出来就抓不住啦！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 1, 0, 0],
+          [0, 1, 1, 1, 0, 0, 0],
+          [1, 2, 2, 2, 0, 0, 0],
+          [0, 1, 1, 1, 1, 0, 0]
+        ],
+        lines: [
+          { x1: 3, y1: 5, x2: 4, y2: 5, color: "#ff4757" }
+        ],
+        markers: [
+          { x: 4, y: 5, text: "要点★", style: "good" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：迎头扳住缩头",
+        title: "迎头一扳，缩头入壳！",
+        text: "黑棋坚决在 (4,5) 迎头一“扳”！白棋出路被彻底堵死，气数被压制，整只乌龟被黑棋生擒！",
+        voice: "看！黑棋在它正前方迎头一挡！白棋脑袋撞在墙上缩回去了，乖乖被我们抓进龟壳！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 1, 0, 0],
+          [0, 1, 1, 1, 0, 0, 0],
+          [1, 2, 2, 2, 1, 0, 0],
+          [0, 1, 1, 1, 1, 0, 0]
+        ],
+        markers: [
+          { x: 4, y: 5, text: "扳✓", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 1, 0, 0],
+      [0, 1, 1, 1, 0, 0, 0],
+      [1, 2, 2, 2, 0, 0, 0],
+      [0, 1, 1, 1, 1, 0, 0]
+    ],
+    validMoves: [
+      { x: 4, y: 5 }
+    ],
+    wrongMoveHints: {
+      "4,4": "挡在三路太靠上了，白棋会直接从 (4,5) 二路溜走啦！必须堵在 (4,5) 二路！",
+      "5,5": "离得太远啦！白棋从 (4,5) 伸出脑袋就逃跑了！要迎头堵在 (4,5)！"
+    },
+    successMsg: "神勇堵截！【乌龟不出头】！黑棋迎头痛击，将白棋困入天罗地网，顺利收网！",
+    voiceSuccess: "哈哈！乌龟不出头！白棋的小脑袋被你稳稳按住了，全被吃掉啦！",
+    explain: "【乌龟不出头】：利用棋盘边线和外围包围网，在对方低路企图伸头时迎头扳堵，迫使其因气紧无法突围而全歼的著名手筋。"
+  },
+  {
+    id: 25,
+    title: "第25关：杀气铁律【有眼杀无眼】",
+    badge: "独具慧眼",
+    category: "杀气手筋",
+    boardSize: 7,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "围棋对杀第一法则：有眼杀无眼！黑棋有一只完整的真眼，白棋没有眼！这时千万别去填中间的公气，而是要紧白棋的外气！快走出正解！",
+    voiceTip: "记住围棋里最重要的秘诀：有眼杀无眼！黑棋有一只漂亮的真眼，白棋没有眼！千万别填公气，从外面紧白棋的气！快走这一步！",
+    answerSpeech: "第25关标准答案：落子在第6列第3行(5,2)！从外部收紧白棋外气，有眼杀无眼大获全胜！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：认识真眼与公气",
+        title: "黑棋有真眼，白棋无眼！",
+        text: "看左边黑棋在 (1,2) 拥有一只真眼！中间 (2,3) 是双方共用的公气。白棋因为不能自杀，永远入不了黑棋的真眼！",
+        voice: "左边黑棋有一只真眼，白棋一下进去就是自杀，所以白棋碰都碰不到黑棋的真眼！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 1, 1, 1, 0, 0, 0],
+          [1, 0, 1, 2, 2, 0, 0],
+          [0, 1, 0, 2, 1, 0, 0],
+          [0, 0, 1, 1, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 1, y: 2, text: "真眼", style: "good" },
+          { x: 2, y: 3, text: "公气", style: "good" },
+          { x: 5, y: 2, text: "外气★", style: "good" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：千万莫填公气",
+        title: "先收外气，从容大胜！",
+        text: "如果黑棋误填公气 (2,3) 会自己少一口气！正确下法是从外部收紧白棋的外气 (5,2)！白棋无力回天！",
+        voice: "千千万万不要填中间的公气！从外面紧白棋的这口气，白棋就全死啦！这就是有眼杀无眼！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 1, 1, 1, 0, 0, 0],
+          [1, 0, 1, 2, 2, 1, 0],
+          [0, 1, 0, 2, 1, 0, 0],
+          [0, 0, 1, 1, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 5, y: 2, text: "收气✓", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 1, 1, 0, 0, 0],
+      [1, 0, 1, 2, 2, 0, 0],
+      [0, 1, 0, 2, 1, 0, 0],
+      [0, 0, 1, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0]
+    ],
+    validMoves: [
+      { x: 5, y: 2 }
+    ],
+    wrongMoveHints: {
+      "2,3": "哎呀！填在公气上了！填公气会自己紧自己的气！必须从外面收紧白棋的外气 (5,2)！",
+      "1,2": "那是你自己的真眼呀！千万不能自己填自己的真眼！"
+    },
+    successMsg: "棋理深邃！【有眼杀无眼】！黑棋收紧外气，真眼成为不可逾越的护城河，白棋全被提吃！",
+    voiceSuccess: "太棒啦！有眼杀无眼！黑棋有真眼，白棋进不来，稳稳吃掉全部白棋！",
+    explain: "【有眼杀无眼】：对杀基本铁律。有眼一方的真眼对方无法填入，公气全归有眼一方所有。对杀时应先紧对方外气，切忌主动填公气。"
+  },
+  {
+    id: 26,
+    title: "第26关：对杀利刃【扑紧气神手】",
+    badge: "紧气神扑",
+    category: "杀气手筋",
+    boardSize: 7,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "双方对杀比拼速度！直接收气黑棋会慢一拍被吃！唯有勇敢地将一颗棋子“扑”入白棋虎口，送给白棋吃，瞬间紧掉白棋的气！快走出这记神扑！",
+    voiceTip: "好紧张的对杀！直接紧气我们要慢一步被吃掉！这时候必须舍得孩子套得狼，把一颗小黑棋扑进白棋嘴里！快扑进去！",
+    answerSpeech: "第26关标准答案：落子在第4列第4行(3,3)！扑入白棋虎口紧气，反败为胜！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：直接紧气必输",
+        title: "直接紧气慢一拍",
+        text: "如果黑棋直接在外围收气，白棋有 3 口气，黑棋只有 2 口气，黑棋会被先吃！唯有在 (3,3) 虎口“扑”入！",
+        voice: "如果老老实实从外面紧气，白棋气比我们多，我们会先死！必须出奇制胜，扑进虎口！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 1, 1, 0, 0, 0],
+          [0, 1, 2, 2, 2, 1, 0],
+          [0, 1, 2, 0, 2, 1, 0],
+          [0, 0, 1, 2, 1, 0, 0],
+          [0, 0, 0, 1, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 3, text: "扑★", style: "good" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：送子反紧其气",
+        title: "送吃一子，紧掉二气！",
+        text: "黑棋 (3,3) 扑入！白棋提吃后，原本的空位被填实，气数瞬间只剩 1 口，黑棋紧接着反打吃全部吃光！",
+        voice: "小黑棋送给白棋吃，白棋吃了以后反而只剩最后一口气！我们接着一打吃，全盘反杀！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 1, 1, 0, 0, 0],
+          [0, 1, 2, 2, 2, 1, 0],
+          [0, 1, 2, 1, 2, 1, 0],
+          [0, 0, 1, 2, 1, 0, 0],
+          [0, 0, 0, 1, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 3, text: "神扑✓", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 1, 1, 0, 0, 0],
+      [0, 1, 2, 2, 2, 1, 0],
+      [0, 1, 2, 0, 2, 1, 0],
+      [0, 0, 1, 2, 1, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0]
+    ],
+    validMoves: [
+      { x: 3, y: 3 }
+    ],
+    wrongMoveHints: {
+      "3,1": "从外面紧气太慢啦！白棋会先把你吃掉！必须在 (3,3) 扑入虎口紧白棋的气！"
+    },
+    successMsg: "反败为胜！【扑紧气神手】！舍一子而紧数气，瞬间逆转对杀速度，精彩绝伦！",
+    voiceSuccess: "神手！扑紧气杀气！送子入虎口，反手全部吃光，太聪明啦！",
+    explain: "【扑紧气】：对杀处于劣势时，故意将一子投入对方虎口被提，迫使对方自填一气，从而在速度上超越对手的制胜杀气手筋。"
+  },
+  {
+    id: 27,
+    title: "第27关：渡过连络【二路下水托】",
+    badge: "水底潜龙",
+    category: "联络手筋",
+    boardSize: 7,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "黑棋两队友军被白棋高高阻隔！但黑棋在二路如同潜龙下水，一记巧妙的“托”紧贴白棋下腹，强行渡江连络！快走出这步下水托！",
+    voiceTip: "黑棋两边的小伙伴被白棋挡住啦！别害怕，黑棋可以从水底下钻过去！在二路紧紧贴着白棋肚子下一记托！快潜水过去联络！",
+    answerSpeech: "第27关标准答案：落子在第4列第6行(3,5)！二路下水托，强行渡过与友军会合！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：受阻与突破口",
+        title: "两翼受阻，二路有玄机",
+        text: "白棋三子横在三路阻隔，黑棋若从上方硬冲会被切断。唯有利用二路边缘的特殊技巧 (3,5) 托过！",
+        voice: "从上面硬撞会被白棋挡住切断！但在最下方的二路，我们可以从白棋脚底下托过去！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 1, 2, 2, 1, 0, 0],
+          [0, 1, 0, 0, 1, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 5, text: "托★", style: "good" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：潜龙出水会合",
+        title: "下水托渡，大军会师！",
+        text: "黑棋下在 (3,5) 紧贴白棋！白棋若敢打吃，黑棋顺势连回并破除白空，双方成功会师！",
+        voice: "黑棋一记下水托！白棋根本断不掉你，两边黑棋高高兴兴连成一大片！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 1, 2, 2, 1, 0, 0],
+          [0, 1, 0, 1, 1, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 5, text: "托✓", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 2, 2, 1, 0, 0],
+      [0, 1, 0, 0, 1, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0]
+    ],
+    validMoves: [
+      { x: 3, y: 5 },
+      { x: 2, y: 5 }
+    ],
+    wrongMoveHints: {
+      "3,3": "从上方硬冲会被白棋反弹撞碎！要在二路 (3,5) 下水托连络！"
+    },
+    successMsg: "水底潜龙！【二路下水托】！黑棋贴腹潜渡，白棋阻拦无效，全线胜利会师！",
+    voiceSuccess: "太巧妙啦！二路下水托！如同一条潜龙从水底穿过，大军胜利会师！",
+    explain: "【二路托】：在二路紧贴对方棋子底部落子的手筋。多用于受阻时下水渡过或破空，是实战极高频的高雅技巧。"
+  },
+  {
+    id: 28,
+    title: "第28关：空间神算【拐弯扭羊头】",
+    badge: "迂回神算",
+    category: "实战战术",
+    boardSize: 9,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "9路大盘实战！白棋以为直线前方有救兵引征！但黑棋看破天机，在关键分叉口向另一方向打吃，把征子路线拐个弯继续抓捕！快走出拐弯征子！",
+    voiceTip: "注意看大棋盘！直线前方有坏蛋的援兵！如果我们直愣愣追就会撞车！必须在拐角处向另一侧打吃，拐弯追击！快下在关键转折点！",
+    answerSpeech: "第28关标准答案：落子在第5列第5行天元(4,4)！拐弯打吃，避开引征子继续征吃！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：前方有引征危险",
+        title: "前方遇阻，切莫直冲",
+        text: "白棋援军在斜前方守候。如果黑棋直线打吃，白棋接应后大逆转！必须把追击方向拐弯！",
+        voice: "看斜前方有白棋的援兵！如果直着赶羊，白棋就跟朋友会合啦！必须向另一边打吃拐弯！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 1, 1, 0, 0, 0, 0, 0],
+          [0, 0, 1, 2, 1, 0, 0, 2, 0],
+          [0, 0, 0, 2, 0, 0, 0, 0, 0],
+          [0, 0, 0, 1, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 4, y: 4, text: "拐★", style: "good" },
+          { x: 7, y: 3, text: "援兵", style: "bad" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：拐弯打吃入网",
+        title: "拐弯追击，手到擒来！",
+        text: "黑棋在 (4,4) 准确向右下方打吃！白棋被迫往无援军的空旷方向逃跑，最终被黑棋征吃！",
+        voice: "好一招拐弯打吃！避开了白棋的援兵，把羊群赶向无路可逃的方向！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 1, 1, 0, 0, 0, 0, 0],
+          [0, 0, 1, 2, 1, 0, 0, 2, 0],
+          [0, 0, 0, 2, 1, 0, 0, 0, 0],
+          [0, 0, 0, 1, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 4, y: 4, text: "拐✓", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 1, 1, 0, 0, 0, 0, 0],
+      [0, 0, 1, 2, 1, 0, 0, 2, 0],
+      [0, 0, 0, 2, 0, 0, 0, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    validMoves: [
+      { x: 4, y: 4 }
+    ],
+    wrongMoveHints: {
+      "2,4": "方向打错啦！打到另一边白棋顺势往援军逃脱啦！要在 (4,4) 向右下拐弯打吃！"
+    },
+    successMsg: "神机妙算！【拐弯扭羊头】！大局观惊艳全场，绕开引征陷阱，完美征杀！",
+    voiceSuccess: "神机妙算！拐弯扭羊头！成功绕开引征陷阱，把白棋抓得牢牢的！",
+    explain: "【拐弯征子】：当常规征子路线前方存在对方引征子时，利用棋盘广阔纵深，在转折点改变叫吃方向，迫使对方逃向安全区域继续征杀的高级算路技巧。"
+  },
+  {
+    id: 29,
+    title: "第29关：官子神技【一线先手扳粘】",
+    badge: "抢先收官",
+    category: "官子技巧",
+    boardSize: 7,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "围棋终盘争夺地盘的关键！一线先手扳粘是价值连城的金子步！黑棋在最底下一线勇敢一“扳”，白棋必须应答，黑棋白白大赚！快下一线扳！",
+    voiceTip: "来到终盘收官啦！边角最底下的一线有一招超级厉害的绝招：先手扳！黑棋往底下一扳，白棋不得不防，我们净赚好几目！快下一线！",
+    answerSpeech: "第29关标准答案：落子在第4列第7行底线(3,6)！一线先手扳，抢占官子巨大价值！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：边角一线的价值",
+        title: "一线先手，价值千金",
+        text: "双方阵营在边角相持。如果在 (3,6) 被白棋先扳，黑空将被大幅蚕食！黑棋抢先在 (3,6) 扳，掌控绝对主动！",
+        voice: "看棋盘最边缘的一线！谁先下一线，谁就能占大便宜！黑棋一定要抢先在底线一扳！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 1, 1, 2, 2, 0, 0],
+          [0, 1, 1, 2, 2, 0, 0],
+          [0, 1, 0, 0, 2, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 6, text: "扳★", style: "good" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：先手搜刮大空",
+        title: "一线扳出，压缩白地！",
+        text: "黑棋 (3,6) 一线扳！白棋若不挡会被长驱直入，黑棋稳赚先手与目数，官子胜势奠定！",
+        voice: "黑棋漂亮的一线扳！白棋手忙脚乱只能跟着防守，我们轻轻松松多赚大片领地！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 1, 1, 2, 2, 0, 0],
+          [0, 1, 1, 2, 2, 0, 0],
+          [0, 1, 0, 1, 2, 0, 0]
+        ],
+        markers: [
+          { x: 3, y: 6, text: "扳✓", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 1, 2, 2, 0, 0],
+      [0, 1, 1, 2, 2, 0, 0],
+      [0, 1, 0, 0, 2, 0, 0]
+    ],
+    validMoves: [
+      { x: 3, y: 6 }
+    ],
+    wrongMoveHints: {
+      "2,6": "退后啦！要在最前沿 (3,6) 勇敢扳过去压制白棋！"
+    },
+    successMsg: "胜券在握！【一线先手扳粘】！官子神技掌控先手，目数大赚，完美锁定胜局！",
+    voiceSuccess: "太棒啦！一线先手扳！不仅抢到了宝贵的先手，还多赚了好多目数，太厉害啦！",
+    explain: "【一线扳粘】：边角收官最重要的大官子手筋之一。具有绝对先手权利，既能扩张己方目数，又能大幅压缩对方空界。"
+  },
+  {
+    id: 30,
+    title: "第30关：终极大考【围棋小大师通关战】",
+    badge: "围棋小大师",
+    category: "综合大考",
+    boardSize: 9,
+    playerColor: BLACK,
+    type: "play_move",
+    tip: "30关终极毕业大考验！9路实战大局！白棋两块大龙貌似相通，但在天元核心断点隐藏着唯一的“神之一手”！穿透断点，两分天下！快走出这神之一手！",
+    voiceTip: "小大师你好！这是全通关的终极挑战！仔细看大棋盘的正中央！两块大白龙看似很牢固，其实中间有一个致命断点！找出来，一刀两断，成为真正的围棋小大师！",
+    answerSpeech: "第30关标准答案：落子在正中天元第5列第5行(4,4)！挖断枢纽，一子定乾坤！恭喜荣登围棋小大师宝座！",
+    teachingSteps: [
+      {
+        shortLabel: "📖 图解1：寻找大龙命门",
+        title: "两龙纠缠，天元枢纽",
+        text: "白棋庞大的联络网中，最关键的心脏正处于 (4,4) 天元！两边各有薄弱接榫处，只要一子楔入即可将白龙彻底撕裂！",
+        voice: "仔细观察整个大棋盘，两边白棋看似连得很紧，其实最中心的天元就是唯一的弱点！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 1, 1, 0, 0, 0, 2, 2, 0],
+          [0, 1, 2, 2, 0, 2, 2, 1, 0],
+          [0, 0, 2, 1, 0, 1, 2, 0, 0],
+          [0, 0, 0, 2, 0, 2, 0, 0, 0],
+          [0, 0, 2, 1, 0, 1, 2, 0, 0],
+          [0, 1, 2, 2, 0, 2, 2, 1, 0],
+          [0, 1, 1, 0, 0, 0, 2, 2, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 4, y: 4, text: "神之一手★", style: "good" }
+        ]
+      },
+      {
+        shortLabel: "📖 图解2：天元穿透定乾坤",
+        title: "一子定乾坤，天下莫能争！",
+        text: "黑棋毅然落子天元 (4,4)！白棋两头不能相顾，陷入双重打吃与接不归绝境，黑棋全盘获胜！",
+        voice: "神之一手！黑棋稳稳落在天元正中央！白棋大龙被彻底斩断，恭喜你通关全部30关，成为威风凛凛的围棋小大师！",
+        board: [
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 1, 1, 0, 0, 0, 2, 2, 0],
+          [0, 1, 2, 2, 0, 2, 2, 1, 0],
+          [0, 0, 2, 1, 0, 1, 2, 0, 0],
+          [0, 0, 0, 2, 1, 2, 0, 0, 0],
+          [0, 0, 2, 1, 0, 1, 2, 0, 0],
+          [0, 1, 2, 2, 0, 2, 2, 1, 0],
+          [0, 1, 1, 0, 0, 0, 2, 2, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ],
+        markers: [
+          { x: 4, y: 4, text: "小大师👑", style: "good" }
+        ]
+      }
+    ],
+    initialBoard: [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 1, 0, 0, 0, 2, 2, 0],
+      [0, 1, 2, 2, 0, 2, 2, 1, 0],
+      [0, 0, 2, 1, 0, 1, 2, 0, 0],
+      [0, 0, 0, 2, 0, 2, 0, 0, 0],
+      [0, 0, 2, 1, 0, 1, 2, 0, 0],
+      [0, 1, 2, 2, 0, 2, 2, 1, 0],
+      [0, 1, 1, 0, 0, 0, 2, 2, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    validMoves: [
+      { x: 4, y: 4 }
+    ],
+    wrongMoveHints: {
+      "4,3": "偏了一格！断点正中心在 (4,4) 天元！",
+      "4,5": "偏了一格！断点正中心在 (4,4) 天元！"
+    },
+    successMsg: "登峰造极！【围棋小大师通关战】！神之一手命中天元断点，斩断大龙定乾坤！热烈祝贺通关全部30关，荣获【围棋小大师】至高勋章！",
+    voiceSuccess: "登峰造极！神之一手！恭喜少儿围棋大宗师，通关全部三十关！荣获围棋小大师至高荣誉！",
+    explain: "【综合手筋·天元破局】：综合运用挖断、双打吃与分断要穴。在纷繁复杂的中盘大局中，准确识破对方联络纽带的虚假连接，一击斩断全局。"
   }
 ];
 
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { PUZZLE_LEVELS };
+}
+
 
 // ====== js/ai.js ======
-// ai.js - 少儿自适应围棋对弈 AI 引擎（融合 1~20 关教学手筋识别、多步算路推演、实战学以致用喝彩与教练支招）
+// ai.js - 少儿自适应围棋对弈 AI 引擎（融合 1~30 关教学手筋识别、多步算路推演、实战学以致用喝彩与教练支招）
+
+if (typeof BLACK === 'undefined') {
+  var BLACK = 1;
+  var WHITE = 2;
+  var EMPTY = 0;
+}
+
+if (typeof GoEngine === 'undefined' && typeof require !== 'undefined') {
+  var { GoEngine } = require('./go-engine.js');
+}
 
 const RANKS = [
   {
@@ -4650,28 +5547,50 @@ class GoAI {
       };
     }
 
-    // 10. 危急长气逃跑（第5关：原本只有 1 气的己方棋串，落子后成功延气至 >= 3 口气）
-    const prevEndangered = prevEngine.getAllGroups().filter(
-      g => g.color === color && g.libertyCount === 1 && g.liberties[0].x === x && g.liberties[0].y === y
-    );
-    if (prevEndangered.length > 0) {
-      const savedGrp = afterEngine.getGroup(x, y);
-      if (savedGrp && savedGrp.libertyCount >= 3) {
-        return {
-          levelId: 5,
-          name: '长气逃跑',
-          praiseText: `🌟 好险呀！你用【第5关：长气逃跑】把只剩 1 口气的小黑棋救出来，长出了 ${savedGrp.libertyCount} 口气！`
-        };
+    // 10. 高阶杀气与死活手筋（第21~30关：扑紧气、二路下水托、一线扳粘）
+    // 扑紧气（第26关）：下在对方虎口中导致自身只有 1 气，但有效紧逼对方
+    const selfGrp = afterEngine.getGroup(x, y);
+    if (selfGrp && selfGrp.libertyCount === 1) {
+      for (const n of afterEngine.getNeighbors(x, y)) {
+        if (afterEngine.board[n.y][n.x] === opponent) {
+          const oppG = afterEngine.getGroup(n.x, n.y);
+          if (oppG && oppG.libertyCount <= 2) {
+            return {
+              levelId: 26,
+              name: '扑紧气',
+              praiseText: `🌟 杀气神手！你使出了【第26关：扑紧气】！舍一子反紧对方重气！`
+            };
+          }
+        }
       }
     }
 
-    // 11. 基础提子（第3关：一次提吃 >= 2 颗子时表扬）
-    if (capturedStones.length >= 2) {
-      return {
-        levelId: 3,
-        name: '提子吃棋',
-        praiseText: `🌟 学以致用！你用【第3关：提子】干净利落地吃掉了 ${capturedStones.length} 颗白棋！`
-      };
+    // 二路下水托（第27关）：在二路贴在对方三路棋子底部
+    const isSecondLine = (x === 1 || x === prevEngine.size - 2 || y === 1 || y === prevEngine.size - 2);
+    if (isSecondLine) {
+      for (const n of prevEngine.getNeighbors(x, y)) {
+        if (prevEngine.board[n.y][n.x] === opponent) {
+          return {
+            levelId: 27,
+            name: '二路托渡',
+            praiseText: `🌟 灵动如龙！你走出【第27关：二路下水托】！下腹潜渡与大军会师！`
+          };
+        }
+      }
+    }
+
+    // 一线先手扳（第29关）：在最边缘一线落子打吃或紧贴
+    const isFirstLine = (x === 0 || x === prevEngine.size - 1 || y === 0 || y === prevEngine.size - 1);
+    if (isFirstLine) {
+      for (const n of prevEngine.getNeighbors(x, y)) {
+        if (prevEngine.board[n.y][n.x] === opponent) {
+          return {
+            levelId: 29,
+            name: '一线扳粘',
+            praiseText: `🌟 官子如神！你抢到了【第29关：一线先手扳】！先手搜刮大胜！`
+          };
+        }
+      }
     }
 
     return null;
@@ -5121,6 +6040,10 @@ class GoAI {
   }
 }
 
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { GoAI, RANKS };
+}
+
 
 // ====== js/app.js ======
 // app.js - 萌宝少儿围棋 主控制器（触控交互、高分屏Canvas渲染、关卡逻辑、AI对战、音效联动）
@@ -5169,11 +6092,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const levelChipsContainer = document.getElementById('levelChipsContainer');
   const btnStageBeginner = document.getElementById('btnStageBeginner');
   const btnStageIntermediate = document.getElementById('btnStageIntermediate');
+  const btnStageAdvanced = document.getElementById('btnStageAdvanced');
   const petCard = document.getElementById('petCard');
   const academyStepPills = document.getElementById('academyStepPills');
   const btnTabPractice = document.getElementById('btnTabPractice');
   const btnTabTeach1 = document.getElementById('btnTabTeach1');
   const btnTabTeach2 = document.getElementById('btnTabTeach2');
+  const btnStartPractice = document.getElementById('btnStartPractice');
   const btnReplayTeach = document.getElementById('btnReplayTeach');
   const btnTeachText = document.getElementById('btnTeachText');
   const answerRevealBox = document.getElementById('answerRevealBox');
@@ -5187,6 +6112,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSpeakInstruction = document.getElementById('btnSpeakInstruction');
   const voiceBtnText = document.getElementById('voiceBtnText');
   const selectVoicePack = document.getElementById('selectVoicePack');
+
+  // 勋章与成就弹窗
+  const badgeModal = document.getElementById('badgeModal');
+  const badgeModalIcon = document.getElementById('badgeModalIcon');
+  const badgeModalTitle = document.getElementById('badgeModalTitle');
+  const badgeModalDesc = document.getElementById('badgeModalDesc');
+  const btnBadgeModalConfirm = document.getElementById('btnBadgeModalConfirm');
+  const unlockedBadgesCount = document.getElementById('unlockedBadgesCount');
+  const badgeProgressBar = document.getElementById('badgeProgressBar');
 
   // 语音播报视觉联动
   VoiceNarrator.setCallbacks(
@@ -5242,7 +6176,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let isAITurn = false;
   let aiTimer = null;           // 托管 AI 延时走子定时器，避免模式切换/悔棋竞态穿透
   let isCaptureGameMode = true; // 初学吃子模式 vs 常规数地模式
-  let targetCaptures = 3;       // 吃满3子获胜
+  let targetCaptures = 5;       // 默认吃满5子获胜（充裕中盘手筋与死活交锋空间）
+  let usedTesujiInMatch = new Set(); // 对弈模式下手筋触发去重集合（降噪体验）
 
   // 竞态定时器与提示光圈清理工具函数
   function clearAITimer() {
@@ -6100,6 +7035,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // 全屏勋章成就解锁喜报弹窗
+  function showBadgeUnlockCelebration(puzzle, onConfirm) {
+    if (!badgeModal) {
+      if (onConfirm) onConfirm();
+      return;
+    }
+    const badgeInfo = (typeof BADGE_DEFINITIONS !== 'undefined' ? BADGE_DEFINITIONS : []).find(b => b.name === puzzle.badge) || { icon: '🏅' };
+    if (badgeModalIcon) badgeModalIcon.textContent = badgeInfo.icon || '🏅';
+    if (badgeModalTitle) badgeModalTitle.textContent = `获颁【${puzzle.badge}】专属勋章！`;
+    if (badgeModalDesc) {
+      badgeModalDesc.innerHTML = `太棒啦！你成功攻克了<strong>${puzzle.title}</strong>！<br><span style="color:#d35400;font-weight:800;">【${puzzle.badge}】专属荣誉勋章已在勋章馆中璀璨点亮！</span><br><br><span style="color:#747d8c;font-size:14px;line-height:1.5;">${puzzle.explain}</span>`;
+    }
+    badgeModal.classList.add('show');
+    if (btnBadgeModalConfirm) {
+      btnBadgeModalConfirm.onclick = () => {
+        SoundEffects.playClick();
+        badgeModal.classList.remove('show');
+        if (onConfirm) onConfirm();
+      };
+    }
+  }
+
   // 闯关通关庆祝
   function onPuzzleComplete(puzzle) {
     SoundEffects.playSuccess();
@@ -6108,12 +7065,12 @@ document.addEventListener('DOMContentLoaded', () => {
       VoiceNarrator.speakSuccess(puzzle.id, puzzle.voiceSuccess || puzzle.successMsg);
     }
 
-    // 仅将真正完成判题过关的关卡 ID 计入 passedPuzzles（修复未通关关卡提前带星标的 Bug）
+    const isFirstUnlock = !userProgress.unlockedBadges.includes(puzzle.badge);
     if (!userProgress.passedPuzzles.includes(puzzle.id)) {
       userProgress.passedPuzzles.push(puzzle.id);
     }
     const nextId = puzzle.id + 1;
-    if (!userProgress.unlockedBadges.includes(puzzle.badge)) {
+    if (isFirstUnlock) {
       userProgress.unlockedBadges.push(puzzle.badge);
     }
     userProgress.stars += 3;
@@ -6121,19 +7078,27 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLevelChips();
     renderBadges();
 
-    // 弹出庆祝模态框
-    showVictoryModal({
-      title: "闯关大成功！★★★",
-      desc: `${puzzle.successMsg}\n\n【知识点】：${puzzle.explain}`,
-      actionText: nextId <= PUZZLE_LEVELS.length ? "下一关！" : "再玩一次",
-      onAction: () => {
-        if (nextId <= PUZZLE_LEVELS.length) {
-          loadPuzzle(nextId - 1);
-        } else {
-          loadPuzzle(0);
+    const proceedToNext = () => {
+      showVictoryModal({
+        title: "闯关大成功！★★★",
+        desc: `${puzzle.successMsg}\n\n【知识点】：${puzzle.explain}`,
+        actionText: nextId <= PUZZLE_LEVELS.length ? "下一关！" : "再玩一次",
+        onAction: () => {
+          if (nextId <= PUZZLE_LEVELS.length) {
+            loadPuzzle(nextId - 1);
+          } else {
+            loadPuzzle(0);
+          }
         }
-      }
-    });
+      });
+    };
+
+    // 首次获得勋章时，弹出全屏荣耀成就大喜报！
+    if (isFirstUnlock) {
+      showBadgeUnlockCelebration(puzzle, proceedToNext);
+    } else {
+      proceedToNext();
+    }
   }
 
   // 实战教学联动：一键跳转复习对应教学关卡与气泡富文本渲染
@@ -6190,23 +7155,19 @@ document.addEventListener('DOMContentLoaded', () => {
     lastMoveWasPlayerTesuji = false;
     const playerTesuji = ai.analyzePlayerMove(prevEngine, engine, gx, gy, playColor, res.captures);
 
-    if (playerTesuji) {
+    if (playerTesuji && !usedTesujiInMatch.has(playerTesuji.name)) {
+      usedTesujiInMatch.add(playerTesuji.name);
       lastMoveWasPlayerTesuji = true;
       if (res.captures.length > 0) {
         SoundEffects.playCapture();
       } else {
         SoundEffects.playSuccess();
       }
+      // 静默胶囊展示：仅在气泡中呈现手筋徽章与一键复习胶囊，不播放长语音打断对弈沉浸思考
       renderSpeechWithLessonLink(playerTesuji.praiseText, playerTesuji.levelId, playerTesuji.name, true);
-      if (VoiceNarrator.isEnabled()) {
-        VoiceNarrator.speak(playerTesuji.praiseText.replace(/^🌟\s*/, ''));
-      }
     } else if (res.captures.length > 0) {
       SoundEffects.playCapture();
       petSpeech.textContent = `哇塞！你吃掉了我的 ${res.captures.length} 颗棋子，太厉害了！`;
-      if (VoiceNarrator.isEnabled()) {
-        VoiceNarrator.speakMatchEvent('match_capture', petSpeech.textContent);
-      }
     } else {
       SoundEffects.playStone();
       // 检查对手是否被打吃
@@ -6214,9 +7175,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (oppStonesInAtari.length > 0) {
         SoundEffects.playAtari();
         petSpeech.textContent = "呀！我的棋子被打吃啦，好紧张！";
-        if (VoiceNarrator.isEnabled()) {
-          VoiceNarrator.speakMatchEvent('match_atari', petSpeech.textContent);
-        }
       } else {
         const quotes = ai.getCurrentRank().quotes;
         petSpeech.textContent = quotes[Math.floor(Math.random() * quotes.length)];
@@ -6622,7 +7580,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 切换到指定【原理图解】步骤（使用预生成的微软 Neural 教学语音包 p{id}_t1 / p{id}_t2）
+  // 切换到指定【原理图解】步骤（先教学再练习原则：先直观演示棋理与语音讲解，辅以醒目大按钮引导练习）
   function startTeachingPhase(stepIndex = 0) {
     clearAITimer();
     clearHint();
@@ -6647,9 +7605,14 @@ document.addEventListener('DOMContentLoaded', () => {
       voiceBtnText.textContent = '听图解讲解';
     }
 
+    // 展现“先教学再练习”大按钮
+    if (btnStartPractice) {
+      btnStartPractice.style.display = 'flex';
+    }
+
     const nextHint = currentTeachStepIndex < steps.length - 1
-      ? '（点棋盘看下一张图解，或点「🎯 动手闯关」直接下棋）'
-      : '（点棋盘即可直接开始闯关！）';
+      ? '（听完讲解后，点下方绿色大按钮或点「🎯 动手闯关」开始做题）'
+      : '（听完讲解后，点下方绿色大按钮即可动手闯关！）';
     petSpeech.innerHTML = `<strong>${step.title}</strong><br>${step.text} <span style="color:#1e90ff;font-weight:700;">${nextHint}</span>`;
 
     renderLevelChips();
@@ -6668,6 +7631,11 @@ document.addEventListener('DOMContentLoaded', () => {
     academySubMode = 'practice';
     puzzleIdentifiedPoints.clear();
 
+    // 动手练习模式下隐藏“开始做题”按钮
+    if (btnStartPractice) {
+      btnStartPractice.style.display = 'none';
+    }
+
     engine.loadBoard(puzzle.initialBoard, puzzle.playerColor);
 
     syncAcademyHeaderUI(puzzle);
@@ -6685,35 +7653,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 阶段切换：'beginner' (1~10关) 或 'intermediate' (11~20关)
+  // 阶段切换：'beginner' (1~10关), 'intermediate' (11~20关) 或 'advanced' (21~30关)
   function switchStage(stage, targetIndex = null) {
     currentStage = stage;
     if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
     if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
+    if (btnStageAdvanced) btnStageAdvanced.classList.toggle('active', currentStage === 'advanced');
 
     if (targetIndex !== null) {
-      loadPuzzle(targetIndex);
+      loadPuzzle(targetIndex, true);
     } else {
-      const minIdx = currentStage === 'beginner' ? 0 : 10;
-      const maxIdx = currentStage === 'beginner' ? 9 : 19;
+      let minIdx = 0;
+      let maxIdx = 9;
+      if (currentStage === 'intermediate') {
+        minIdx = 10;
+        maxIdx = 19;
+      } else if (currentStage === 'advanced') {
+        minIdx = 20;
+        maxIdx = 29;
+      }
       if (currentPuzzleIndex < minIdx || currentPuzzleIndex > maxIdx) {
-        loadPuzzle(minIdx);
+        loadPuzzle(minIdx, true);
       } else {
         renderLevelChips();
       }
     }
   }
 
-  // 加载指定关卡（默认直接进入可交互的闯关棋盘，告别繁琐的强制翻页 PPT；随时可点上方“图解1/2”查看原理）
-  function loadPuzzle(index, startInTeach = false) {
+  // 加载指定关卡（遵循“先教学再练习”原则：默认 startInTeach = true 展示原理图解，再引导动手闯关）
+  function loadPuzzle(index, startInTeach = true) {
     clearAITimer();
     clearHint();
     clearFollowUpTimers();
     if (scoreBox) scoreBox.style.display = 'none';
     currentPuzzleIndex = index;
 
-    // 自动同步所属阶段（初级 vs 中级）
-    if (index >= 10 && currentStage !== 'intermediate') {
+    // 自动同步所属三阶段（初级 vs 中级 vs 高级）
+    if (index >= 20 && currentStage !== 'advanced') {
+      currentStage = 'advanced';
+    } else if (index >= 10 && index < 20 && currentStage !== 'intermediate') {
       currentStage = 'intermediate';
     } else if (index < 10 && currentStage !== 'beginner') {
       currentStage = 'beginner';
@@ -6727,7 +7705,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 渲染关卡选项卡（根据当前阶段展示 1~10 或 11~20 关，保持界面清爽，方便 iPad 触控）
+  // 渲染关卡选项卡（根据当前阶段展示 1~10、11~20 或 21~30 关，保持界面清爽大字号，方便触控）
   function renderLevelChips() {
     if (!levelChipsContainer) return;
     levelChipsContainer.innerHTML = '';
@@ -6735,9 +7713,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
     if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
+    if (btnStageAdvanced) btnStageAdvanced.classList.toggle('active', currentStage === 'advanced');
 
-    const startIdx = currentStage === 'beginner' ? 0 : 10;
-    const endIdx = currentStage === 'beginner' ? 10 : 20;
+    let startIdx = 0;
+    let endIdx = 10;
+    if (currentStage === 'intermediate') {
+      startIdx = 10;
+      endIdx = 20;
+    } else if (currentStage === 'advanced') {
+      startIdx = 20;
+      endIdx = 30;
+    }
     const stagePuzzles = PUZZLE_LEVELS.slice(startIdx, endIdx);
 
     stagePuzzles.forEach((p, offset) => {
@@ -6749,7 +7735,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chip.textContent = `${p.id}. ${p.category}`;
       chip.onclick = () => {
         SoundEffects.playClick();
-        loadPuzzle(idx);
+        loadPuzzle(idx, true);
       };
       if (isActive) activeChipEl = chip;
       levelChipsContainer.appendChild(chip);
@@ -6761,43 +7747,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 渲染荣誉徽章（20关对应20枚专属荣誉勋章）
+  // 勋章定义清单（涵盖全部30关对应的专属荣誉勋章）
+  const BADGE_DEFINITIONS = [
+    { name: "入门徽章", icon: "🌱", desc: "完成数气启蒙" },
+    { name: "观察小能手", icon: "🔍", desc: "掌握角边死活" },
+    { name: "吃子小神童", icon: "🥕", desc: "掌握提子技巧" },
+    { name: "威风凛凛", icon: "⚡", desc: "熟练运用打吃" },
+    { name: "逃脱大师", icon: "🏃", desc: "成功逃脱虎口" },
+    { name: "智慧之眼", icon: "👁️", desc: "识别禁着陷阱" },
+    { name: "大门守卫", icon: "🚪", desc: "掌握门吃技巧" },
+    { name: "爱心怀抱", icon: "🤗", desc: "掌握抱吃技巧" },
+    { name: "不败宗师", icon: "🏰", desc: "掌握两眼活棋" },
+    { name: "追击神将", icon: "🐏", desc: "完成扭羊头征子" },
+    { name: "双响炮神", icon: "💣", desc: "掌握双打吃手筋" },
+    { name: "天罗地网", icon: "🕸️", desc: "掌握飞枷吃子" },
+    { name: "以退为进", icon: "🪃", desc: "掌握倒扑舍子妙手" },
+    { name: "断路斩将", icon: "⚔️", desc: "掌握接不归战法" },
+    { name: "劈山神斧", icon: "🪓", desc: "掌握挖与夹手筋" },
+    { name: "明察秋毫", icon: "🧐", desc: "准确识别真眼与假眼" },
+    { name: "一击必杀", icon: "🎯", desc: "掌握破眼杀棋急所" },
+    { name: "包子大厨", icon: "🥟", desc: "掌握滚打包收战法" },
+    { name: "和平使者", icon: "🕊️", desc: "领悟双活共生之道" },
+    { name: "金鸡至尊", icon: "👑", desc: "掌握金鸡独立绝技" },
+    { name: "丁四克星", icon: "🎯", desc: "掌握丁四破眼要害" },
+    { name: "屠龙破刃", icon: "🗡️", desc: "掌握刀把五聚杀绝技" },
+    { name: "傲雪寒梅", icon: "🌸", desc: "掌握梅花五点心神技" },
+    { name: "缩头入壳", icon: "🐢", desc: "掌握乌龟不出头包收" },
+    { name: "独具慧眼", icon: "👁️‍🗨️", desc: "掌握有眼杀无眼铁律" },
+    { name: "紧气神扑", icon: "⚡", desc: "掌握扑紧气杀气手筋" },
+    { name: "水底潜龙", icon: "🌊", desc: "掌握二路下水托渡连络" },
+    { name: "迂回神算", icon: "🌀", desc: "掌握拐弯征子空间计算" },
+    { name: "抢先收官", icon: "👑", desc: "掌握一线先手扳粘官子" },
+    { name: "围棋小大师", icon: "🌟", desc: "通关全部30关终极大考" }
+  ];
+
+  // 渲染荣誉徽章馆（30关专属勋章 + 顶部荣誉进度条）
   function renderBadges() {
     const badgeGrid = document.getElementById('badgeGrid');
     if (!badgeGrid) return;
 
-    const allBadges = [
-      { name: "入门徽章", icon: "🌱", desc: "完成数气启蒙" },
-      { name: "观察小能手", icon: "🔍", desc: "掌握角边死活" },
-      { name: "吃子小神童", icon: "🥕", desc: "掌握提子技巧" },
-      { name: "威风凛凛", icon: "⚡", desc: "熟练运用打吃" },
-      { name: "逃脱大师", icon: "🏃", desc: "成功逃脱虎口" },
-      { name: "智慧之眼", icon: "👁️", desc: "识别禁着陷阱" },
-      { name: "大门守卫", icon: "🚪", desc: "掌握门吃技巧" },
-      { name: "爱心怀抱", icon: "🤗", desc: "掌握抱吃技巧" },
-      { name: "不败宗师", icon: "🏰", desc: "掌握两眼活棋" },
-      { name: "追击神将", icon: "🐏", desc: "完成扭羊头征子" },
-      { name: "双响炮神", icon: "💣", desc: "掌握双打吃手筋" },
-      { name: "天罗地网", icon: "🕸️", desc: "掌握飞枷吃子" },
-      { name: "以退为进", icon: "🪃", desc: "掌握倒扑舍子妙手" },
-      { name: "断路斩将", icon: "⚔️", desc: "掌握接不归战法" },
-      { name: "劈山神斧", icon: "🪓", desc: "掌握挖与夹手筋" },
-      { name: "明察秋毫", icon: "🧐", desc: "准确识别真眼与假眼" },
-      { name: "一击必杀", icon: "🎯", desc: "掌握破眼杀棋急所" },
-      { name: "包子大厨", icon: "🥟", desc: "掌握滚打包收战法" },
-      { name: "和平使者", icon: "🕊️", desc: "领悟双活共生之道" },
-      { name: "金鸡至尊", icon: "👑", desc: "掌握金鸡独立绝技" }
-    ];
+    const unlockedCount = userProgress.unlockedBadges.length;
+    if (unlockedBadgesCount) {
+      unlockedBadgesCount.textContent = unlockedCount;
+    }
+    if (badgeProgressBar) {
+      const pct = Math.min(100, Math.round((unlockedCount / BADGE_DEFINITIONS.length) * 100));
+      badgeProgressBar.style.width = `${pct}%`;
+    }
 
     badgeGrid.innerHTML = '';
-    allBadges.forEach(b => {
+    BADGE_DEFINITIONS.forEach(b => {
       const unlocked = userProgress.unlockedBadges.includes(b.name);
       const card = document.createElement('div');
       card.className = `badge-item ${unlocked ? 'unlocked' : ''}`;
       card.innerHTML = `
         <div class="badge-icon">${b.icon}</div>
         <div class="badge-name">${b.name}</div>
-        <div class="badge-status">${unlocked ? '已获得 ★★★' : '闯关解锁'}</div>
+        <div class="badge-status">${unlocked ? '已点亮 ★★★' : '闯关解锁'}</div>
       `;
       badgeGrid.appendChild(card);
     });
@@ -6808,6 +7814,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearAITimer();
     clearHint();
     clearFollowUpTimers();
+    usedTesujiInMatch.clear(); // 清空手筋去重记录
     const size = parseInt(selectBoardSize.value, 10);
     engine.reset(size);
     isAITurn = false;
@@ -6971,7 +7978,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 对弈模式选择
   selectGameMode.onchange = (e) => {
     isCaptureGameMode = e.target.value === 'capture';
-    targetCaptures = parseInt(selectGameMode.options[selectGameMode.selectedIndex].dataset.target || '3', 10);
+    targetCaptures = parseInt(selectGameMode.options[selectGameMode.selectedIndex].dataset.target || '5', 10);
     resetMatch();
   };
 
@@ -7024,6 +8031,20 @@ document.addEventListener('DOMContentLoaded', () => {
     btnStageIntermediate.onclick = () => {
       SoundEffects.playClick();
       switchStage('intermediate');
+    };
+  }
+
+  if (btnStageAdvanced) {
+    btnStageAdvanced.onclick = () => {
+      SoundEffects.playClick();
+      switchStage('advanced');
+    };
+  }
+
+  if (btnStartPractice) {
+    btnStartPractice.onclick = () => {
+      SoundEffects.playClick();
+      startPracticePhase();
     };
   }
 
@@ -7150,8 +8171,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ====== 8. 初始化执行 ======
+  renderBadges();
   renderLevelChips();
-  loadPuzzle(0);
+  loadPuzzle(0, true);
 
   // iPad 微信 / Safari 首次触摸自动解锁语音（解决苹果系统禁止网页未点击自动出声的问题）
   let firstTouchUnlocked = false;

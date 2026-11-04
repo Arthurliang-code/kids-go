@@ -1,6 +1,6 @@
-// sw.js - Service Worker 离线缓存引擎（v3 Neural 神经网络语音升级版）
+// sw.js - Service Worker 离线缓存引擎（v11 题库扩充至30关 + 先教学再练习 + 适老化大字号大按钮）
 
-const CACHE_NAME = 'kids-go-v10-ui-fix';
+const CACHE_NAME = 'kids-go-v11-advanced-puzzles';
 
 const STATIC_ASSETS = [
   './',

@@ -210,7 +210,7 @@ const VoiceNarrator = (() => {
     }, 60);
   }
 
-  // 通用动态文本朗读
+  // 通用动态文本朗读（离线纯本地优先：直接走浏览器原生 Web Speech 引擎，严禁依赖远程/本地未运行的 /api/tts）
   function speak(text, isManual = false) {
     if (!isManual && !autoEnabled) return;
     if (!text) return;
@@ -220,47 +220,7 @@ const VoiceNarrator = (() => {
     const cleanText = text.replace(/<[^>]+>/g, '').replace(/[★*#_`~💡🎉🏆🌿📖🎯✓✗]/g, '').trim();
     if (!cleanText) return;
 
-    // 仅当访问本地 Python TTS 服务端（端口 8088 等）时尝试调用 /api/tts，静态托管或离线直接走兜底
-    const isLocalPythonServer =
-      typeof window !== 'undefined' &&
-      !window.IS_STANDALONE_HTML &&
-      (window.location.protocol === 'http:' || window.location.protocol === 'https:') &&
-      !/github\.io$/i.test(window.location.hostname);
-
-    if (!isLocalPythonServer) {
-      speakWithBrowserTTS(cleanText, myToken);
-      return;
-    }
-
-    const pack = PACK_ALIAS[currentVoicePack] || 'xiaoxiao';
-    const ttsUrl = `/api/tts?voice=${encodeURIComponent(pack)}&text=${encodeURIComponent(cleanText)}`;
-    const audio = new Audio(ttsUrl);
-    currentAudio = audio;
-
-    audio.onplay = () => {
-      if (myToken !== playToken) return;
-      isSpeaking = true;
-      if (onStartCallback) onStartCallback();
-    };
-    audio.onended = () => {
-      if (myToken !== playToken) return;
-      isSpeaking = false;
-      currentAudio = null;
-      if (onEndCallback) onEndCallback();
-    };
-    audio.onerror = () => {
-      if (myToken !== playToken) return;
-      currentAudio = null;
-      isSpeaking = false;
-      speakWithBrowserTTS(cleanText, myToken);
-    };
-
-    audio.play().catch(() => {
-      if (myToken !== playToken) return;
-      currentAudio = null;
-      isSpeaking = false;
-      speakWithBrowserTTS(cleanText, myToken);
-    });
+    speakWithBrowserTTS(cleanText, myToken);
   }
 
   return {
@@ -297,3 +257,7 @@ const VoiceNarrator = (() => {
     }
   };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { VoiceNarrator };
+}

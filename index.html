@@ -64,10 +64,11 @@
             </select>
           </div>
         </div>
-        <!-- 教学阶段切换：启蒙初级 vs 进阶中级 -->
+        <!-- 教学阶段切换：启蒙初级 vs 进阶中级 vs 神算高级 -->
         <div class="stage-switcher" id="stageSwitcher">
           <button class="stage-pill active" id="btnStageBeginner">🌱 启蒙初级 (1~10关)</button>
           <button class="stage-pill" id="btnStageIntermediate">🔥 进阶中级 (11~20关)</button>
+          <button class="stage-pill" id="btnStageAdvanced">👑 神算高级 (21~30关)</button>
         </div>
         <div class="level-chips-scroll" id="levelChipsContainer">
           <!-- 动态生成 1~10 关卡胶囊 -->
@@ -78,10 +79,21 @@
     <!-- 2. 我的勋章视图 -->
     <section class="view-section" id="viewBadges">
       <div class="level-selector-card">
-        <div class="level-header-row">
-          <span class="level-title-large">🏆 围棋小大师勋章馆</span>
+        <div class="badge-hero-banner">
+          <div class="badge-hero-header">
+            <div class="badge-hero-title-group">
+              <span class="badge-hero-icon">🏆</span>
+              <span class="level-title-large">围棋小大师荣誉勋章馆</span>
+            </div>
+            <div class="badge-count-badge">
+              已点亮 <span id="unlockedBadgesCount" class="badge-highlight-num">0</span> / 30 枚
+            </div>
+          </div>
+          <p class="badge-hero-subtitle">挑战知识闯关或段位升级，点亮你的璀璨荣誉之章！</p>
+          <div class="badge-progress-track">
+            <div class="badge-progress-fill" id="badgeProgressBar" style="width: 0%;"></div>
+          </div>
         </div>
-        <p style="font-size: 13px; color: #747d8c; margin-bottom: 12px;">完成知识闯关或在对弈中升级，即可点亮专属勋章！</p>
         <div class="badge-grid" id="badgeGrid">
           <!-- 动态生成勋章卡片 -->
         </div>
@@ -110,6 +122,10 @@
               </div>
             </div>
             <div class="pet-speech" id="petSpeech">你好呀！欢迎来到围棋世界，让我们开始第一课吧！</div>
+            <!-- “先教学再练习”核心主按钮：看懂图解后一键切入做题 -->
+            <button class="btn-fun btn-start-practice" id="btnStartPractice" style="display: none;">
+              <span>👉</span> 看明白了，开始动手做题！
+            </button>
             <!-- 答案解析与自动演示内嵌条（仅在点击“显示答案”时展开，不额外撑开独立弹窗） -->
             <div class="answer-reveal-box" id="answerRevealBox" style="display: none;">
               <div class="answer-reveal-content" id="answerRevealText"></div>
@@ -211,8 +227,8 @@
           <div class="toggle-row">
             <span>对战玩法</span>
             <select id="selectGameMode" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ddd; font-weight: 700; background: #fff;">
-              <option value="capture" data-target="3" selected>吃子棋 (先吃3子赢)</option>
-              <option value="capture" data-target="5">吃子棋 (先吃5子赢)</option>
+              <option value="capture" data-target="5" selected>吃子棋 (先吃5子赢)</option>
+              <option value="capture" data-target="3">吃子棋 (先吃3子赢)</option>
               <option value="territory">标准围地数子</option>
             </select>
           </div>
@@ -238,6 +254,20 @@
       <p class="modal-desc" id="modalDesc">太棒了，你找到了正确的方法！</p>
       <button class="btn-fun btn-primary" id="btnModalAction" style="width: 100%; font-size: 18px; padding: 14px;">
         继续前进！
+      </button>
+    </div>
+  </div>
+
+  <!-- 全屏勋章成就解锁喜报弹窗 (Celebration Modal) -->
+  <div class="modal-overlay" id="badgeModal">
+    <div class="modal-content badge-unlock-card">
+      <div class="star-celebration">✨ 🎖️ 🏆 🎖️ ✨</div>
+      <div class="badge-unlock-emblem" id="badgeModalIcon">🏅</div>
+      <div class="badge-unlock-pill">新荣誉已点亮</div>
+      <h3 class="modal-title" id="badgeModalTitle" style="color: #d35400; font-size: 24px; margin-top: 6px;">获颁专属勋章！</h3>
+      <p class="modal-desc" id="badgeModalDesc" style="font-size: 16px; color: #2f3542; line-height: 1.6;">太棒了，你掌握了新的围棋绝技！</p>
+      <button class="btn-fun btn-green" id="btnBadgeModalConfirm" style="width: 100%; font-size: 18px; padding: 14px; margin-top: 10px;">
+        太棒啦，收入勋章馆！
       </button>
     </div>
   </div>

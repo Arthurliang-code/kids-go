@@ -312,3 +312,7 @@ class GoEngine {
     this.turn = turn;
   }
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { GoEngine, EMPTY, BLACK, WHITE };
+}

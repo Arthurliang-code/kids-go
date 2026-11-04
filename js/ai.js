@@ -1,4 +1,14 @@
-// ai.js - 少儿自适应围棋对弈 AI 引擎（融合 1~20 关教学手筋识别、多步算路推演、实战学以致用喝彩与教练支招）
+// ai.js - 少儿自适应围棋对弈 AI 引擎（融合 1~30 关教学手筋识别、多步算路推演、实战学以致用喝彩与教练支招）
+
+if (typeof BLACK === 'undefined') {
+  var BLACK = 1;
+  var WHITE = 2;
+  var EMPTY = 0;
+}
+
+if (typeof GoEngine === 'undefined' && typeof require !== 'undefined') {
+  var { GoEngine } = require('./go-engine.js');
+}
 
 const RANKS = [
   {
@@ -872,28 +882,50 @@ class GoAI {
       };
     }
 
-    // 10. 危急长气逃跑（第5关：原本只有 1 气的己方棋串，落子后成功延气至 >= 3 口气）
-    const prevEndangered = prevEngine.getAllGroups().filter(
-      g => g.color === color && g.libertyCount === 1 && g.liberties[0].x === x && g.liberties[0].y === y
-    );
-    if (prevEndangered.length > 0) {
-      const savedGrp = afterEngine.getGroup(x, y);
-      if (savedGrp && savedGrp.libertyCount >= 3) {
-        return {
-          levelId: 5,
-          name: '长气逃跑',
-          praiseText: `🌟 好险呀！你用【第5关：长气逃跑】把只剩 1 口气的小黑棋救出来，长出了 ${savedGrp.libertyCount} 口气！`
-        };
+    // 10. 高阶杀气与死活手筋（第21~30关：扑紧气、二路下水托、一线扳粘）
+    // 扑紧气（第26关）：下在对方虎口中导致自身只有 1 气，但有效紧逼对方
+    const selfGrp = afterEngine.getGroup(x, y);
+    if (selfGrp && selfGrp.libertyCount === 1) {
+      for (const n of afterEngine.getNeighbors(x, y)) {
+        if (afterEngine.board[n.y][n.x] === opponent) {
+          const oppG = afterEngine.getGroup(n.x, n.y);
+          if (oppG && oppG.libertyCount <= 2) {
+            return {
+              levelId: 26,
+              name: '扑紧气',
+              praiseText: `🌟 杀气神手！你使出了【第26关：扑紧气】！舍一子反紧对方重气！`
+            };
+          }
+        }
       }
     }
 
-    // 11. 基础提子（第3关：一次提吃 >= 2 颗子时表扬）
-    if (capturedStones.length >= 2) {
-      return {
-        levelId: 3,
-        name: '提子吃棋',
-        praiseText: `🌟 学以致用！你用【第3关：提子】干净利落地吃掉了 ${capturedStones.length} 颗白棋！`
-      };
+    // 二路下水托（第27关）：在二路贴在对方三路棋子底部
+    const isSecondLine = (x === 1 || x === prevEngine.size - 2 || y === 1 || y === prevEngine.size - 2);
+    if (isSecondLine) {
+      for (const n of prevEngine.getNeighbors(x, y)) {
+        if (prevEngine.board[n.y][n.x] === opponent) {
+          return {
+            levelId: 27,
+            name: '二路托渡',
+            praiseText: `🌟 灵动如龙！你走出【第27关：二路下水托】！下腹潜渡与大军会师！`
+          };
+        }
+      }
+    }
+
+    // 一线先手扳（第29关）：在最边缘一线落子打吃或紧贴
+    const isFirstLine = (x === 0 || x === prevEngine.size - 1 || y === 0 || y === prevEngine.size - 1);
+    if (isFirstLine) {
+      for (const n of prevEngine.getNeighbors(x, y)) {
+        if (prevEngine.board[n.y][n.x] === opponent) {
+          return {
+            levelId: 29,
+            name: '一线扳粘',
+            praiseText: `🌟 官子如神！你抢到了【第29关：一线先手扳】！先手搜刮大胜！`
+          };
+        }
+      }
     }
 
     return null;
@@ -1341,4 +1373,8 @@ class GoAI {
 
     return best;
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { GoAI, RANKS };
 }

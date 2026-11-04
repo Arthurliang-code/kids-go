@@ -44,11 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const levelChipsContainer = document.getElementById('levelChipsContainer');
   const btnStageBeginner = document.getElementById('btnStageBeginner');
   const btnStageIntermediate = document.getElementById('btnStageIntermediate');
+  const btnStageAdvanced = document.getElementById('btnStageAdvanced');
   const petCard = document.getElementById('petCard');
   const academyStepPills = document.getElementById('academyStepPills');
   const btnTabPractice = document.getElementById('btnTabPractice');
   const btnTabTeach1 = document.getElementById('btnTabTeach1');
   const btnTabTeach2 = document.getElementById('btnTabTeach2');
+  const btnStartPractice = document.getElementById('btnStartPractice');
   const btnReplayTeach = document.getElementById('btnReplayTeach');
   const btnTeachText = document.getElementById('btnTeachText');
   const answerRevealBox = document.getElementById('answerRevealBox');
@@ -62,6 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSpeakInstruction = document.getElementById('btnSpeakInstruction');
   const voiceBtnText = document.getElementById('voiceBtnText');
   const selectVoicePack = document.getElementById('selectVoicePack');
+
+  // 勋章与成就弹窗
+  const badgeModal = document.getElementById('badgeModal');
+  const badgeModalIcon = document.getElementById('badgeModalIcon');
+  const badgeModalTitle = document.getElementById('badgeModalTitle');
+  const badgeModalDesc = document.getElementById('badgeModalDesc');
+  const btnBadgeModalConfirm = document.getElementById('btnBadgeModalConfirm');
+  const unlockedBadgesCount = document.getElementById('unlockedBadgesCount');
+  const badgeProgressBar = document.getElementById('badgeProgressBar');
 
   // 语音播报视觉联动
   VoiceNarrator.setCallbacks(
@@ -117,7 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let isAITurn = false;
   let aiTimer = null;           // 托管 AI 延时走子定时器，避免模式切换/悔棋竞态穿透
   let isCaptureGameMode = true; // 初学吃子模式 vs 常规数地模式
-  let targetCaptures = 3;       // 吃满3子获胜
+  let targetCaptures = 5;       // 默认吃满5子获胜（充裕中盘手筋与死活交锋空间）
+  let usedTesujiInMatch = new Set(); // 对弈模式下手筋触发去重集合（降噪体验）
 
   // 竞态定时器与提示光圈清理工具函数
   function clearAITimer() {
@@ -975,6 +987,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // 全屏勋章成就解锁喜报弹窗
+  function showBadgeUnlockCelebration(puzzle, onConfirm) {
+    if (!badgeModal) {
+      if (onConfirm) onConfirm();
+      return;
+    }
+    const badgeInfo = (typeof BADGE_DEFINITIONS !== 'undefined' ? BADGE_DEFINITIONS : []).find(b => b.name === puzzle.badge) || { icon: '🏅' };
+    if (badgeModalIcon) badgeModalIcon.textContent = badgeInfo.icon || '🏅';
+    if (badgeModalTitle) badgeModalTitle.textContent = `获颁【${puzzle.badge}】专属勋章！`;
+    if (badgeModalDesc) {
+      badgeModalDesc.innerHTML = `太棒啦！你成功攻克了<strong>${puzzle.title}</strong>！<br><span style="color:#d35400;font-weight:800;">【${puzzle.badge}】专属荣誉勋章已在勋章馆中璀璨点亮！</span><br><br><span style="color:#747d8c;font-size:14px;line-height:1.5;">${puzzle.explain}</span>`;
+    }
+    badgeModal.classList.add('show');
+    if (btnBadgeModalConfirm) {
+      btnBadgeModalConfirm.onclick = () => {
+        SoundEffects.playClick();
+        badgeModal.classList.remove('show');
+        if (onConfirm) onConfirm();
+      };
+    }
+  }
+
   // 闯关通关庆祝
   function onPuzzleComplete(puzzle) {
     SoundEffects.playSuccess();
@@ -983,12 +1017,12 @@ document.addEventListener('DOMContentLoaded', () => {
       VoiceNarrator.speakSuccess(puzzle.id, puzzle.voiceSuccess || puzzle.successMsg);
     }
 
-    // 仅将真正完成判题过关的关卡 ID 计入 passedPuzzles（修复未通关关卡提前带星标的 Bug）
+    const isFirstUnlock = !userProgress.unlockedBadges.includes(puzzle.badge);
     if (!userProgress.passedPuzzles.includes(puzzle.id)) {
       userProgress.passedPuzzles.push(puzzle.id);
     }
     const nextId = puzzle.id + 1;
-    if (!userProgress.unlockedBadges.includes(puzzle.badge)) {
+    if (isFirstUnlock) {
       userProgress.unlockedBadges.push(puzzle.badge);
     }
     userProgress.stars += 3;
@@ -996,19 +1030,27 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLevelChips();
     renderBadges();
 
-    // 弹出庆祝模态框
-    showVictoryModal({
-      title: "闯关大成功！★★★",
-      desc: `${puzzle.successMsg}\n\n【知识点】：${puzzle.explain}`,
-      actionText: nextId <= PUZZLE_LEVELS.length ? "下一关！" : "再玩一次",
-      onAction: () => {
-        if (nextId <= PUZZLE_LEVELS.length) {
-          loadPuzzle(nextId - 1);
-        } else {
-          loadPuzzle(0);
+    const proceedToNext = () => {
+      showVictoryModal({
+        title: "闯关大成功！★★★",
+        desc: `${puzzle.successMsg}\n\n【知识点】：${puzzle.explain}`,
+        actionText: nextId <= PUZZLE_LEVELS.length ? "下一关！" : "再玩一次",
+        onAction: () => {
+          if (nextId <= PUZZLE_LEVELS.length) {
+            loadPuzzle(nextId - 1);
+          } else {
+            loadPuzzle(0);
+          }
         }
-      }
-    });
+      });
+    };
+
+    // 首次获得勋章时，弹出全屏荣耀成就大喜报！
+    if (isFirstUnlock) {
+      showBadgeUnlockCelebration(puzzle, proceedToNext);
+    } else {
+      proceedToNext();
+    }
   }
 
   // 实战教学联动：一键跳转复习对应教学关卡与气泡富文本渲染
@@ -1065,23 +1107,19 @@ document.addEventListener('DOMContentLoaded', () => {
     lastMoveWasPlayerTesuji = false;
     const playerTesuji = ai.analyzePlayerMove(prevEngine, engine, gx, gy, playColor, res.captures);
 
-    if (playerTesuji) {
+    if (playerTesuji && !usedTesujiInMatch.has(playerTesuji.name)) {
+      usedTesujiInMatch.add(playerTesuji.name);
       lastMoveWasPlayerTesuji = true;
       if (res.captures.length > 0) {
         SoundEffects.playCapture();
       } else {
         SoundEffects.playSuccess();
       }
+      // 静默胶囊展示：仅在气泡中呈现手筋徽章与一键复习胶囊，不播放长语音打断对弈沉浸思考
       renderSpeechWithLessonLink(playerTesuji.praiseText, playerTesuji.levelId, playerTesuji.name, true);
-      if (VoiceNarrator.isEnabled()) {
-        VoiceNarrator.speak(playerTesuji.praiseText.replace(/^🌟\s*/, ''));
-      }
     } else if (res.captures.length > 0) {
       SoundEffects.playCapture();
       petSpeech.textContent = `哇塞！你吃掉了我的 ${res.captures.length} 颗棋子，太厉害了！`;
-      if (VoiceNarrator.isEnabled()) {
-        VoiceNarrator.speakMatchEvent('match_capture', petSpeech.textContent);
-      }
     } else {
       SoundEffects.playStone();
       // 检查对手是否被打吃
@@ -1089,9 +1127,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (oppStonesInAtari.length > 0) {
         SoundEffects.playAtari();
         petSpeech.textContent = "呀！我的棋子被打吃啦，好紧张！";
-        if (VoiceNarrator.isEnabled()) {
-          VoiceNarrator.speakMatchEvent('match_atari', petSpeech.textContent);
-        }
       } else {
         const quotes = ai.getCurrentRank().quotes;
         petSpeech.textContent = quotes[Math.floor(Math.random() * quotes.length)];
@@ -1497,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 切换到指定【原理图解】步骤（使用预生成的微软 Neural 教学语音包 p{id}_t1 / p{id}_t2）
+  // 切换到指定【原理图解】步骤（先教学再练习原则：先直观演示棋理与语音讲解，辅以醒目大按钮引导练习）
   function startTeachingPhase(stepIndex = 0) {
     clearAITimer();
     clearHint();
@@ -1522,9 +1557,14 @@ document.addEventListener('DOMContentLoaded', () => {
       voiceBtnText.textContent = '听图解讲解';
     }
 
+    // 展现“先教学再练习”大按钮
+    if (btnStartPractice) {
+      btnStartPractice.style.display = 'flex';
+    }
+
     const nextHint = currentTeachStepIndex < steps.length - 1
-      ? '（点棋盘看下一张图解，或点「🎯 动手闯关」直接下棋）'
-      : '（点棋盘即可直接开始闯关！）';
+      ? '（听完讲解后，点下方绿色大按钮或点「🎯 动手闯关」开始做题）'
+      : '（听完讲解后，点下方绿色大按钮即可动手闯关！）';
     petSpeech.innerHTML = `<strong>${step.title}</strong><br>${step.text} <span style="color:#1e90ff;font-weight:700;">${nextHint}</span>`;
 
     renderLevelChips();
@@ -1543,6 +1583,11 @@ document.addEventListener('DOMContentLoaded', () => {
     academySubMode = 'practice';
     puzzleIdentifiedPoints.clear();
 
+    // 动手练习模式下隐藏“开始做题”按钮
+    if (btnStartPractice) {
+      btnStartPractice.style.display = 'none';
+    }
+
     engine.loadBoard(puzzle.initialBoard, puzzle.playerColor);
 
     syncAcademyHeaderUI(puzzle);
@@ -1560,35 +1605,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 阶段切换：'beginner' (1~10关) 或 'intermediate' (11~20关)
+  // 阶段切换：'beginner' (1~10关), 'intermediate' (11~20关) 或 'advanced' (21~30关)
   function switchStage(stage, targetIndex = null) {
     currentStage = stage;
     if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
     if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
+    if (btnStageAdvanced) btnStageAdvanced.classList.toggle('active', currentStage === 'advanced');
 
     if (targetIndex !== null) {
-      loadPuzzle(targetIndex);
+      loadPuzzle(targetIndex, true);
     } else {
-      const minIdx = currentStage === 'beginner' ? 0 : 10;
-      const maxIdx = currentStage === 'beginner' ? 9 : 19;
+      let minIdx = 0;
+      let maxIdx = 9;
+      if (currentStage === 'intermediate') {
+        minIdx = 10;
+        maxIdx = 19;
+      } else if (currentStage === 'advanced') {
+        minIdx = 20;
+        maxIdx = 29;
+      }
       if (currentPuzzleIndex < minIdx || currentPuzzleIndex > maxIdx) {
-        loadPuzzle(minIdx);
+        loadPuzzle(minIdx, true);
       } else {
         renderLevelChips();
       }
     }
   }
 
-  // 加载指定关卡（默认直接进入可交互的闯关棋盘，告别繁琐的强制翻页 PPT；随时可点上方“图解1/2”查看原理）
-  function loadPuzzle(index, startInTeach = false) {
+  // 加载指定关卡（遵循“先教学再练习”原则：默认 startInTeach = true 展示原理图解，再引导动手闯关）
+  function loadPuzzle(index, startInTeach = true) {
     clearAITimer();
     clearHint();
     clearFollowUpTimers();
     if (scoreBox) scoreBox.style.display = 'none';
     currentPuzzleIndex = index;
 
-    // 自动同步所属阶段（初级 vs 中级）
-    if (index >= 10 && currentStage !== 'intermediate') {
+    // 自动同步所属三阶段（初级 vs 中级 vs 高级）
+    if (index >= 20 && currentStage !== 'advanced') {
+      currentStage = 'advanced';
+    } else if (index >= 10 && index < 20 && currentStage !== 'intermediate') {
       currentStage = 'intermediate';
     } else if (index < 10 && currentStage !== 'beginner') {
       currentStage = 'beginner';
@@ -1602,7 +1657,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 渲染关卡选项卡（根据当前阶段展示 1~10 或 11~20 关，保持界面清爽，方便 iPad 触控）
+  // 渲染关卡选项卡（根据当前阶段展示 1~10、11~20 或 21~30 关，保持界面清爽大字号，方便触控）
   function renderLevelChips() {
     if (!levelChipsContainer) return;
     levelChipsContainer.innerHTML = '';
@@ -1610,9 +1665,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
     if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
+    if (btnStageAdvanced) btnStageAdvanced.classList.toggle('active', currentStage === 'advanced');
 
-    const startIdx = currentStage === 'beginner' ? 0 : 10;
-    const endIdx = currentStage === 'beginner' ? 10 : 20;
+    let startIdx = 0;
+    let endIdx = 10;
+    if (currentStage === 'intermediate') {
+      startIdx = 10;
+      endIdx = 20;
+    } else if (currentStage === 'advanced') {
+      startIdx = 20;
+      endIdx = 30;
+    }
     const stagePuzzles = PUZZLE_LEVELS.slice(startIdx, endIdx);
 
     stagePuzzles.forEach((p, offset) => {
@@ -1624,7 +1687,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chip.textContent = `${p.id}. ${p.category}`;
       chip.onclick = () => {
         SoundEffects.playClick();
-        loadPuzzle(idx);
+        loadPuzzle(idx, true);
       };
       if (isActive) activeChipEl = chip;
       levelChipsContainer.appendChild(chip);
@@ -1636,43 +1699,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 渲染荣誉徽章（20关对应20枚专属荣誉勋章）
+  // 勋章定义清单（涵盖全部30关对应的专属荣誉勋章）
+  const BADGE_DEFINITIONS = [
+    { name: "入门徽章", icon: "🌱", desc: "完成数气启蒙" },
+    { name: "观察小能手", icon: "🔍", desc: "掌握角边死活" },
+    { name: "吃子小神童", icon: "🥕", desc: "掌握提子技巧" },
+    { name: "威风凛凛", icon: "⚡", desc: "熟练运用打吃" },
+    { name: "逃脱大师", icon: "🏃", desc: "成功逃脱虎口" },
+    { name: "智慧之眼", icon: "👁️", desc: "识别禁着陷阱" },
+    { name: "大门守卫", icon: "🚪", desc: "掌握门吃技巧" },
+    { name: "爱心怀抱", icon: "🤗", desc: "掌握抱吃技巧" },
+    { name: "不败宗师", icon: "🏰", desc: "掌握两眼活棋" },
+    { name: "追击神将", icon: "🐏", desc: "完成扭羊头征子" },
+    { name: "双响炮神", icon: "💣", desc: "掌握双打吃手筋" },
+    { name: "天罗地网", icon: "🕸️", desc: "掌握飞枷吃子" },
+    { name: "以退为进", icon: "🪃", desc: "掌握倒扑舍子妙手" },
+    { name: "断路斩将", icon: "⚔️", desc: "掌握接不归战法" },
+    { name: "劈山神斧", icon: "🪓", desc: "掌握挖与夹手筋" },
+    { name: "明察秋毫", icon: "🧐", desc: "准确识别真眼与假眼" },
+    { name: "一击必杀", icon: "🎯", desc: "掌握破眼杀棋急所" },
+    { name: "包子大厨", icon: "🥟", desc: "掌握滚打包收战法" },
+    { name: "和平使者", icon: "🕊️", desc: "领悟双活共生之道" },
+    { name: "金鸡至尊", icon: "👑", desc: "掌握金鸡独立绝技" },
+    { name: "丁四克星", icon: "🎯", desc: "掌握丁四破眼要害" },
+    { name: "屠龙破刃", icon: "🗡️", desc: "掌握刀把五聚杀绝技" },
+    { name: "傲雪寒梅", icon: "🌸", desc: "掌握梅花五点心神技" },
+    { name: "缩头入壳", icon: "🐢", desc: "掌握乌龟不出头包收" },
+    { name: "独具慧眼", icon: "👁️‍🗨️", desc: "掌握有眼杀无眼铁律" },
+    { name: "紧气神扑", icon: "⚡", desc: "掌握扑紧气杀气手筋" },
+    { name: "水底潜龙", icon: "🌊", desc: "掌握二路下水托渡连络" },
+    { name: "迂回神算", icon: "🌀", desc: "掌握拐弯征子空间计算" },
+    { name: "抢先收官", icon: "👑", desc: "掌握一线先手扳粘官子" },
+    { name: "围棋小大师", icon: "🌟", desc: "通关全部30关终极大考" }
+  ];
+
+  // 渲染荣誉徽章馆（30关专属勋章 + 顶部荣誉进度条）
   function renderBadges() {
     const badgeGrid = document.getElementById('badgeGrid');
     if (!badgeGrid) return;
 
-    const allBadges = [
-      { name: "入门徽章", icon: "🌱", desc: "完成数气启蒙" },
-      { name: "观察小能手", icon: "🔍", desc: "掌握角边死活" },
-      { name: "吃子小神童", icon: "🥕", desc: "掌握提子技巧" },
-      { name: "威风凛凛", icon: "⚡", desc: "熟练运用打吃" },
-      { name: "逃脱大师", icon: "🏃", desc: "成功逃脱虎口" },
-      { name: "智慧之眼", icon: "👁️", desc: "识别禁着陷阱" },
-      { name: "大门守卫", icon: "🚪", desc: "掌握门吃技巧" },
-      { name: "爱心怀抱", icon: "🤗", desc: "掌握抱吃技巧" },
-      { name: "不败宗师", icon: "🏰", desc: "掌握两眼活棋" },
-      { name: "追击神将", icon: "🐏", desc: "完成扭羊头征子" },
-      { name: "双响炮神", icon: "💣", desc: "掌握双打吃手筋" },
-      { name: "天罗地网", icon: "🕸️", desc: "掌握飞枷吃子" },
-      { name: "以退为进", icon: "🪃", desc: "掌握倒扑舍子妙手" },
-      { name: "断路斩将", icon: "⚔️", desc: "掌握接不归战法" },
-      { name: "劈山神斧", icon: "🪓", desc: "掌握挖与夹手筋" },
-      { name: "明察秋毫", icon: "🧐", desc: "准确识别真眼与假眼" },
-      { name: "一击必杀", icon: "🎯", desc: "掌握破眼杀棋急所" },
-      { name: "包子大厨", icon: "🥟", desc: "掌握滚打包收战法" },
-      { name: "和平使者", icon: "🕊️", desc: "领悟双活共生之道" },
-      { name: "金鸡至尊", icon: "👑", desc: "掌握金鸡独立绝技" }
-    ];
+    const unlockedCount = userProgress.unlockedBadges.length;
+    if (unlockedBadgesCount) {
+      unlockedBadgesCount.textContent = unlockedCount;
+    }
+    if (badgeProgressBar) {
+      const pct = Math.min(100, Math.round((unlockedCount / BADGE_DEFINITIONS.length) * 100));
+      badgeProgressBar.style.width = `${pct}%`;
+    }
 
     badgeGrid.innerHTML = '';
-    allBadges.forEach(b => {
+    BADGE_DEFINITIONS.forEach(b => {
       const unlocked = userProgress.unlockedBadges.includes(b.name);
       const card = document.createElement('div');
       card.className = `badge-item ${unlocked ? 'unlocked' : ''}`;
       card.innerHTML = `
         <div class="badge-icon">${b.icon}</div>
         <div class="badge-name">${b.name}</div>
-        <div class="badge-status">${unlocked ? '已获得 ★★★' : '闯关解锁'}</div>
+        <div class="badge-status">${unlocked ? '已点亮 ★★★' : '闯关解锁'}</div>
       `;
       badgeGrid.appendChild(card);
     });
@@ -1683,6 +1766,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearAITimer();
     clearHint();
     clearFollowUpTimers();
+    usedTesujiInMatch.clear(); // 清空手筋去重记录
     const size = parseInt(selectBoardSize.value, 10);
     engine.reset(size);
     isAITurn = false;
@@ -1846,7 +1930,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 对弈模式选择
   selectGameMode.onchange = (e) => {
     isCaptureGameMode = e.target.value === 'capture';
-    targetCaptures = parseInt(selectGameMode.options[selectGameMode.selectedIndex].dataset.target || '3', 10);
+    targetCaptures = parseInt(selectGameMode.options[selectGameMode.selectedIndex].dataset.target || '5', 10);
     resetMatch();
   };
 
@@ -1899,6 +1983,20 @@ document.addEventListener('DOMContentLoaded', () => {
     btnStageIntermediate.onclick = () => {
       SoundEffects.playClick();
       switchStage('intermediate');
+    };
+  }
+
+  if (btnStageAdvanced) {
+    btnStageAdvanced.onclick = () => {
+      SoundEffects.playClick();
+      switchStage('advanced');
+    };
+  }
+
+  if (btnStartPractice) {
+    btnStartPractice.onclick = () => {
+      SoundEffects.playClick();
+      startPracticePhase();
     };
   }
 
@@ -2025,8 +2123,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ====== 8. 初始化执行 ======
+  renderBadges();
   renderLevelChips();
-  loadPuzzle(0);
+  loadPuzzle(0, true);
 
   // iPad 微信 / Safari 首次触摸自动解锁语音（解决苹果系统禁止网页未点击自动出声的问题）
   let firstTouchUnlocked = false;
