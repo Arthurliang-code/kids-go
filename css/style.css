@@ -1203,3 +1203,42 @@ input:checked + .slider:before {
     font-size: 14px;
   }
 }
+
+/* ====== 实战“学以致用”徽章与课堂复习快捷胶囊 ====== */
+.tesuji-praise-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  margin-right: 6px;
+  background: linear-gradient(135deg, #ff9f43, #ff6b6b);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.35);
+  vertical-align: middle;
+}
+
+.hint-lesson-link {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  margin-top: 4px;
+  padding: 3px 10px;
+  background: #fff4e6;
+  color: #d9480f;
+  border: 1.5px solid #ffc078;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+  vertical-align: middle;
+}
+
+.hint-lesson-link:hover,
+.hint-lesson-link:active {
+  background: #ffe8cc;
+  transform: scale(1.04);
+}
+

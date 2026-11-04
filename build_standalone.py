@@ -97,9 +97,10 @@ def build_html_bundle(packs_to_include, bitrate='24k'):
     scripts_block = "<script>\n" + "\n\n".join(combined_js) + "\n</script>"
 
     # 替换原有的外部 script 引用
+    replacement_str = f'<!-- 单文件全量离线内嵌脚本与神经网络语音包 -->\n{scripts_block}\n</body>'
     html = re.sub(
         r'<!-- 模块化脚本加载 -->.*?</body>',
-        f'<!-- 单文件全量离线内嵌脚本与神经网络语音包 -->\n{scripts_block}\n</body>',
+        lambda _: replacement_str,
         html,
         flags=re.DOTALL
     )

@@ -1011,11 +1011,50 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 实战教学联动：一键跳转复习对应教学关卡与气泡富文本渲染
+  let lastMoveWasPlayerTesuji = false;
+
+  function jumpToLessonLevel(levelId) {
+    const idx = PUZZLE_LEVELS.findIndex(p => p.id === levelId);
+    if (idx !== -1) {
+      currentPuzzleIndex = idx;
+      tabAcademy.click();
+    }
+  }
+
+  function renderSpeechWithLessonLink(text, levelId, tacticName, isPraise = false) {
+    petSpeech.innerHTML = '';
+    if (isPraise) {
+      const badge = document.createElement('span');
+      badge.className = 'tesuji-praise-badge';
+      badge.textContent = '🌟 学以致用';
+      petSpeech.appendChild(badge);
+    }
+    const textSpan = document.createElement('span');
+    textSpan.textContent = isPraise
+      ? text.replace(/^🌟\s*(学以致用！|妙手生花！|高手风范！|火眼金睛！|势如破竹！|威力无穷！|好险呀！)?/, '')
+      : text;
+    petSpeech.appendChild(textSpan);
+
+    if (levelId) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'hint-lesson-link';
+      btn.textContent = `📖 复习第${levelId}关：${tacticName}`;
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        jumpToLessonLevel(levelId);
+      };
+      petSpeech.appendChild(btn);
+    }
+  }
+
   // 对弈模式玩家走子
   function handleMatchMove(gx, gy) {
     const playColor = BLACK; // 玩家始终执黑
     if (engine.turn !== playColor) return;
 
+    const prevEngine = ai.cloneEngine(engine);
     const res = engine.play(gx, gy, playColor);
     if (!res.success) {
       SoundEffects.playGentleError();
@@ -1023,7 +1062,21 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (res.captures.length > 0) {
+    lastMoveWasPlayerTesuji = false;
+    const playerTesuji = ai.analyzePlayerMove(prevEngine, engine, gx, gy, playColor, res.captures);
+
+    if (playerTesuji) {
+      lastMoveWasPlayerTesuji = true;
+      if (res.captures.length > 0) {
+        SoundEffects.playCapture();
+      } else {
+        SoundEffects.playSuccess();
+      }
+      renderSpeechWithLessonLink(playerTesuji.praiseText, playerTesuji.levelId, playerTesuji.name, true);
+      if (VoiceNarrator.isEnabled()) {
+        VoiceNarrator.speak(playerTesuji.praiseText.replace(/^🌟\s*/, ''));
+      }
+    } else if (res.captures.length > 0) {
       SoundEffects.playCapture();
       petSpeech.textContent = `哇塞！你吃掉了我的 ${res.captures.length} 颗棋子，太厉害了！`;
       if (VoiceNarrator.isEnabled()) {
@@ -1061,7 +1114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       aiMove();
-    }, 600);
+    }, lastMoveWasPlayerTesuji ? 950 : 600);
   }
 
   // AI 智能走子
@@ -1087,17 +1140,42 @@ document.addEventListener('DOMContentLoaded', () => {
     if (res.success) {
       if (res.captures.length > 0) {
         SoundEffects.playCapture();
-        petSpeech.textContent = `嘻嘻！我吃掉了你 ${res.captures.length} 颗棋子哦~`;
+        if (best.coachInfo && best.coachInfo.levelId >= 7) {
+          renderSpeechWithLessonLink(
+            `嘻嘻！我用【第${best.coachInfo.levelId}关：${best.coachInfo.name}】吃掉了你 ${res.captures.length} 颗棋子哦~`,
+            best.coachInfo.levelId,
+            best.coachInfo.name,
+            false
+          );
+        } else {
+          petSpeech.textContent = `嘻嘻！我吃掉了你 ${res.captures.length} 颗棋子哦~`;
+        }
       } else {
         SoundEffects.playStone();
         // 检查玩家棋子是否被打吃
         const playerInAtari = engine.getAllGroups().filter(g => g.color === BLACK && g.libertyCount === 1);
         if (playerInAtari.length > 0) {
           SoundEffects.playAtari();
-          petSpeech.textContent = "小心哦！你的小黑棋被打吃了，快看看能不能逃！";
-          if (VoiceNarrator.isEnabled()) {
-            VoiceNarrator.speakMatchEvent('match_ai_atari', petSpeech.textContent);
+          if (best.coachInfo && best.coachInfo.levelId >= 7) {
+            renderSpeechWithLessonLink(
+              `小心哦！我使出了【第${best.coachInfo.levelId}关：${best.coachInfo.name}】，你的小黑棋危险啦！`,
+              best.coachInfo.levelId,
+              best.coachInfo.name,
+              false
+            );
+          } else {
+            petSpeech.textContent = "小心哦！你的小黑棋被打吃了，快看看能不能逃！";
           }
+          if (VoiceNarrator.isEnabled()) {
+            VoiceNarrator.speakMatchEvent('match_ai_atari', "小心哦！你的小黑棋被打吃了，快看看能不能逃！");
+          }
+        } else if (best.coachInfo && [9, 12, 13, 16, 17, 20].includes(best.coachInfo.levelId)) {
+          renderSpeechWithLessonLink(
+            `看招！我使出了课堂绝技【第${best.coachInfo.levelId}关：${best.coachInfo.name}】哦！`,
+            best.coachInfo.levelId,
+            best.coachInfo.name,
+            false
+          );
         }
       }
     }
@@ -1729,24 +1807,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 熊猫导师锦囊妙计 (Hint)
+  // 熊猫导师锦囊妙计 (Hint) —— 结合 20 关教学棋理讲解为什么下这里
   btnHint.onclick = () => {
     SoundEffects.playClick();
     const legal = engine.getLegalMoves(BLACK);
     if (legal.length > 0) {
-      // 找出当前最推荐的一手
-      const tempAI = new GoAI();
-      tempAI.setRankIndex(4); // 借用 1D 熊猫智力评估
-      const rec = tempAI.getBestMove(engine, BLACK);
-      if (rec) {
+      const hint = ai.getCoachingHint(engine, BLACK, isCaptureGameMode);
+      if (hint) {
         clearHint();
-        hintCoord = { gx: rec.x, gy: rec.y };
+        hintCoord = { gx: hint.x, gy: hint.y };
         drawBoard();
-        petSpeech.textContent = `💡 熊猫师傅提示：下在 (${rec.x + 1}, ${rec.y + 1}) 是一步好棋哦！`;
+        renderSpeechWithLessonLink(hint.coachText, hint.levelId, hint.tacticName, false);
         hintTimer = setTimeout(() => {
           clearHint();
           drawBoard();
-        }, 3000);
+        }, 5000);
       }
     }
   };
