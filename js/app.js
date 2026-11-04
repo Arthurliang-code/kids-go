@@ -1289,7 +1289,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!inMatch) return;
 
     const rank = ai.getCurrentRank();
-    if (opponentSideName) opponentSideName.textContent = `${rank.icon} ${rank.animal}（执白）`;
+    if (opponentSideName) opponentSideName.textContent = `${rank.icon} ${rank.animal}`;
 
     const playerTurn = engine.turn === BLACK;
     if (playerSideBlack) playerSideBlack.classList.toggle('active', playerTurn);

@@ -478,6 +478,15 @@ body {
 .side-info {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.side-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .side-name {
@@ -485,17 +494,37 @@ body {
   font-weight: 800;
   color: #2f3542;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.side-tag {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 6px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.side-tag.black-tag {
+  background: #2f3542;
+  color: #ffffff;
+}
+
+.side-tag.white-tag {
+  background: #dfe4ea;
+  color: #57606f;
+  border: 1px solid #ced6e0;
 }
 
 .side-caps {
   font-size: 12px;
   color: #747d8c;
+  line-height: 1.2;
 }
 
 .side-caps b {
-  font-size: 18px;
+  font-size: 17px;
+  font-weight: 900;
   color: #2f3542;
 }
 
