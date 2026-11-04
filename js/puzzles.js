@@ -1,9 +1,10 @@
 // puzzles.js - 少儿围棋进阶闯关题库（即学即练互动图解、精准棋理判题、错着诊断与动态追击演示）
 
-if (typeof BLACK === 'undefined') {
-  var BLACK = 1;
-  var WHITE = 2;
-  var EMPTY = 0;
+if (typeof window === 'undefined' && typeof require !== 'undefined') {
+  const _engine = require('./go-engine.js');
+  global.BLACK = _engine.BLACK;
+  global.WHITE = _engine.WHITE;
+  global.EMPTY = _engine.EMPTY;
 }
 
 const PUZZLE_LEVELS = [

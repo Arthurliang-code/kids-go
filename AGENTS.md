@@ -24,12 +24,12 @@
 
 在向用户汇报或执行 `git commit` / `git push` 前，必须按顺序执行以下六个步骤验证，确保全部通过：
 
-### 1. 语法与模块编译检查 (Syntax Check)
-任何 JS 代码修改后，必须运行以下命令进行 Node.js 静态语法验证：
+### 1. 语法与模块编译检查 (Syntax & Runtime Check)
+任何 JS 代码修改后，必须运行以下命令进行 Node.js 静态语法与全局上下文运行时模拟加载验证：
 ```bash
-node -c js/go-engine.js && node -c js/puzzles.js && node -c js/ai.js && node -c js/voice.js && node -c js/app.js && node -c sw.js
+node -c js/go-engine.js && node -c js/puzzles.js && node -c js/ai.js && node -c js/voice.js && node -c js/app.js && node -c sw.js && node tests/browser_runtime.test.js
 ```
-**标准**：退出码为 0，控制台无任何 SyntaxError。
+**标准**：退出码为 0，控制台无任何 SyntaxError，多脚本在同一全局作用域下无重名变量或标识符提升冲突。
 
 ### 2. 题库数据结构与规则引擎闭环验证 (Puzzle Integrity Test)
 当修改或新增题库（如 `js/puzzles.js`）时，必须执行自动化脚本校验：

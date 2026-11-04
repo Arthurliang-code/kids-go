@@ -1,13 +1,11 @@
 // ai.js - 少儿自适应围棋对弈 AI 引擎（融合 1~30 关教学手筋识别、多步算路推演、实战学以致用喝彩与教练支招）
 
-if (typeof BLACK === 'undefined') {
-  var BLACK = 1;
-  var WHITE = 2;
-  var EMPTY = 0;
-}
-
-if (typeof GoEngine === 'undefined' && typeof require !== 'undefined') {
-  var { GoEngine } = require('./go-engine.js');
+if (typeof window === 'undefined' && typeof require !== 'undefined') {
+  const _engine = require('./go-engine.js');
+  global.BLACK = _engine.BLACK;
+  global.WHITE = _engine.WHITE;
+  global.EMPTY = _engine.EMPTY;
+  global.GoEngine = _engine.GoEngine;
 }
 
 const RANKS = [

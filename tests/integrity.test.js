@@ -1,6 +1,6 @@
-const { GoEngine, BLACK, WHITE } = require('./js/go-engine.js');
-const { PUZZLE_LEVELS } = require('./js/puzzles.js');
-const { GoAI, RANKS } = require('./js/ai.js');
+const { GoEngine, BLACK, WHITE } = require('../js/go-engine.js');
+const { PUZZLE_LEVELS } = require('../js/puzzles.js');
+const { GoAI, RANKS } = require('../js/ai.js');
 
 console.log('====================================================');
 console.log('🚀 执行 AGENTS.md 规范：全量自动化闭环测试');
