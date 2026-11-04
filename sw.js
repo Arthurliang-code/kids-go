@@ -1,6 +1,6 @@
 // sw.js - Service Worker 离线缓存引擎（v3 Neural 神经网络语音升级版）
 
-const CACHE_NAME = 'kids-go-v8-smart-ai';
+const CACHE_NAME = 'kids-go-v9-ui-fix';
 
 const STATIC_ASSETS = [
   './',

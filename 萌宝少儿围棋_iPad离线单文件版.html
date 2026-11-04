@@ -398,14 +398,18 @@ body {
   }
 }
 
+/* 对弈双方阵营卡 */
 .score-box {
   background: var(--panel-bg);
   border-radius: var(--border-radius-md);
-  padding: 14px 18px;
+  padding: 12px;
   box-shadow: var(--shadow-cartoon);
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .player-score {
@@ -437,19 +441,15 @@ body {
   flex-shrink: 0;
 }
 
-/* 对弈双方阵营卡 */
-.score-box {
-  gap: 8px;
-  padding: 12px;
-}
-
 .player-side {
   position: relative;
-  flex: 1;
+  flex: 1 1 0%;
+  min-width: 0;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 10px 10px;
+  gap: 6px;
+  padding: 14px 8px 10px;
   border-radius: 14px;
   border: 3px solid transparent;
   background: #f5f6fa;
@@ -461,14 +461,13 @@ body {
   opacity: 1;
   background: #fffbea;
   border-color: #ffa502;
-  box-shadow: 0 0 0 4px rgba(255, 165, 2, 0.2), 0 6px 14px rgba(255, 165, 2, 0.25);
-  transform: scale(1.03);
+  box-shadow: 0 0 0 3px rgba(255, 165, 2, 0.25), 0 4px 10px rgba(255, 165, 2, 0.2);
 }
 
 #playerSideBlack.active {
   background: #eefcf3;
   border-color: #2ed573;
-  box-shadow: 0 0 0 4px rgba(46, 213, 115, 0.2), 0 6px 14px rgba(46, 213, 115, 0.3);
+  box-shadow: 0 0 0 3px rgba(46, 213, 115, 0.25), 0 4px 10px rgba(46, 213, 115, 0.2);
 }
 
 .turn-flag {
@@ -497,6 +496,7 @@ body {
 
 .side-info {
   min-width: 0;
+  flex: 1;
 }
 
 .side-name {
