@@ -1347,6 +1347,9 @@ document.addEventListener('DOMContentLoaded', () => {
     petAvatar.textContent = rank.icon;
     petName.textContent = rank.name;
     petRank.textContent = rank.title;
+    if (currentMode === 'match' && btnStartPractice) {
+      btnStartPractice.style.display = 'none';
+    }
   }
 
   function showVictoryModal({ title, desc, actionText, onAction }) {
@@ -1785,6 +1788,8 @@ document.addEventListener('DOMContentLoaded', () => {
     currentMode = 'match';
     if (petCard) petCard.classList.remove('mode-teach');
     if (academyStepPills) academyStepPills.style.display = 'none';
+    if (btnStartPractice) btnStartPractice.style.display = 'none';
+    if (answerRevealBox) answerRevealBox.style.display = 'none';
     if (scoreBox) scoreBox.style.display = 'flex';
     updatePetCard();
     resetMatch();
@@ -1828,6 +1833,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (scoreBox) scoreBox.style.display = 'flex';
     academyControls.style.display = 'none';
     matchControls.style.display = 'flex';
+    if (btnStartPractice) btnStartPractice.style.display = 'none';
+    if (answerRevealBox) answerRevealBox.style.display = 'none';
     initMatchView();
   };
 
@@ -1844,6 +1851,8 @@ document.addEventListener('DOMContentLoaded', () => {
     viewBadges.classList.add('active');
     gameLayout.style.display = 'none';
     if (scoreBox) scoreBox.style.display = 'none';
+    if (btnStartPractice) btnStartPractice.style.display = 'none';
+    if (answerRevealBox) answerRevealBox.style.display = 'none';
     renderBadges();
   };
 

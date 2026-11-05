@@ -1,6 +1,6 @@
-// sw.js - Service Worker 离线缓存引擎（v11 题库扩充至30关 + 先教学再练习 + 适老化大字号大按钮）
+// sw.js - Service Worker 离线缓存引擎（v12 包含30关全量 Edge Neural 微软神经网络真声预缓存）
 
-const CACHE_NAME = 'kids-go-v11-advanced-puzzles';
+const CACHE_NAME = 'kids-go-v12-neural-p30';
 
 const STATIC_ASSETS = [
   './',
@@ -53,7 +53,17 @@ const BASE_AUDIO_CLIPS = [
   'p17_intro', 'p17_win', 'p17_t1', 'p17_t2', 'p17_ans',
   'p18_intro', 'p18_win', 'p18_t1', 'p18_t2', 'p18_ans',
   'p19_intro', 'p19_win', 'p19_t1', 'p19_t2', 'p19_ans',
-  'p20_intro', 'p20_win', 'p20_t1', 'p20_t2', 'p20_ans'
+  'p20_intro', 'p20_win', 'p20_t1', 'p20_t2', 'p20_ans',
+  'p21_intro', 'p21_win', 'p21_t1', 'p21_t2', 'p21_ans',
+  'p22_intro', 'p22_win', 'p22_t1', 'p22_t2', 'p22_ans',
+  'p23_intro', 'p23_win', 'p23_t1', 'p23_t2', 'p23_ans',
+  'p24_intro', 'p24_win', 'p24_t1', 'p24_t2', 'p24_ans',
+  'p25_intro', 'p25_win', 'p25_t1', 'p25_t2', 'p25_ans',
+  'p26_intro', 'p26_win', 'p26_t1', 'p26_t2', 'p26_ans',
+  'p27_intro', 'p27_win', 'p27_t1', 'p27_t2', 'p27_ans',
+  'p28_intro', 'p28_win', 'p28_t1', 'p28_t2', 'p28_ans',
+  'p29_intro', 'p29_win', 'p29_t1', 'p29_t2', 'p29_ans',
+  'p30_intro', 'p30_win', 'p30_t1', 'p30_t2', 'p30_ans'
 ];
 
 VOICE_PACKS.forEach(pack => {
