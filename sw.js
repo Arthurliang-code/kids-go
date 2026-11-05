@@ -1,6 +1,6 @@
-// sw.js - Service Worker 离线缓存引擎（v12 包含30关全量 Edge Neural 微软神经网络真声预缓存）
+// sw.js - Service Worker 离线缓存引擎（v13 包含30关全量 Edge Neural 微软神经网络真声预缓存）
 
-const CACHE_NAME = 'kids-go-v12-neural-p30';
+const CACHE_NAME = 'kids-go-v13-neural-p30';
 
 const STATIC_ASSETS = [
   './',

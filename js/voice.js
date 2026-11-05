@@ -210,7 +210,7 @@ const VoiceNarrator = (() => {
     }, 60);
   }
 
-  // 通用动态文本朗读（离线纯本地优先：直接走浏览器原生 Web Speech 引擎，严禁依赖远程/本地未运行的 /api/tts）
+  // 通用动态文本朗读（离线纯本地优先：直接走浏览器原生 Web Speech 引擎，严禁依赖远程服务端接口）
   function speak(text, isManual = false) {
     if (!isManual && !autoEnabled) return;
     if (!text) return;

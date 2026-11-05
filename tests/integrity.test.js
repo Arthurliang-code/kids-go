@@ -105,6 +105,96 @@ RANKS.forEach((rk, rIdx) => {
 });
 
 console.log('✅ AI 对弈引擎全部段位模拟测试通过！');
+
+console.log('\n[TEST 2b] GoAI 战术引擎手筋识别器准确率检定 (AGENTS.md 规范 3)...');
+const tesujiTests = [
+  { name: '双打吃', levelId: 11, check: (eng, x, y, c) => !!ai.detectDoubleAtari(eng, x, y, c) },
+  { name: '门吃', levelId: 7, check: (eng, x, y, c) => {
+    const gh = ai.detectGateOrHugCapture(eng, x, y, c);
+    return gh && gh.name === '门吃';
+  }},
+  { name: '抱吃', levelId: 8, check: (eng, x, y, c) => {
+    const gh = ai.detectGateOrHugCapture(eng, x, y, c);
+    return gh && gh.name === '抱吃';
+  }},
+  { name: '扭羊头征子', levelId: 10, check: (eng, x, y, c) => !!ai.detectLadderAttack(eng, x, y, c) },
+  { name: '飞枷', levelId: 12, check: (eng, x, y, c) => !!ai.detectNetCapture(eng, x, y, c) },
+  { name: '倒扑', levelId: 13, check: (eng, x, y, c) => !!ai.detectSnapback(eng, x, y, c) },
+  { name: '挖与夹', levelId: 15, check: (eng, x, y, c) => !!ai.detectWedgeAndCut(eng, x, y, c) },
+  { name: '两眼做活', levelId: 9, check: (eng, x, y, c) => {
+    const ev = ai.detectEyeVitalPoint(eng, x, y, c);
+    return ev && ev.type === 'make_two_eyes';
+  }},
+  { name: '点眼杀棋', levelId: 17, check: (eng, x, y, c) => {
+    const ev = ai.detectEyeVitalPoint(eng, x, y, c);
+    return ev && ev.type === 'destroy_eye';
+  }},
+  { name: '金鸡独立', levelId: 20, check: (eng, x, y, c) => !!ai.detectGoldenRooster(eng, x, y, c) },
+  { name: '实战学以致用识别 (analyzePlayerMove)', levelId: 20, check: (eng, x, y, c) => {
+    const afterEng = new GoEngine(eng.size);
+    afterEng.loadBoard(eng.board, c);
+    const res = afterEng.play(x, y, c);
+    const mv = ai.analyzePlayerMove(eng, afterEng, x, y, c, res.captures);
+    return mv && mv.name === '金鸡独立';
+  }}
+];
+
+let passCount = 0;
+tesujiTests.forEach(tc => {
+  const p = PUZZLE_LEVELS.find(lvl => lvl.id === tc.levelId);
+  if (!p || !p.validMoves || !p.validMoves[0]) {
+    throw new Error(`手筋测试关卡 ${tc.levelId} 未找到有效正解坐标`);
+  }
+  const eng = new GoEngine(p.boardSize);
+  eng.loadBoard(p.initialBoard, p.playerColor);
+  const vm = p.validMoves[0];
+  const passed = tc.check(eng, vm.x, vm.y, p.playerColor);
+  if (!passed) {
+    throw new Error(`手筋探测器 [${tc.name}] 识别未命中！`);
+  }
+  passCount++;
+});
+console.log(`✅ ${passCount}/${tesujiTests.length} 项核心手筋探测器识别准确率 100% 通过！`);
+
+// 3. 语音 TTS 资产与离线映射闭环验证
+console.log('\n[TEST 3] 语音 TTS 资产与离线映射校验 (AGENTS.md 规范 4)...');
+const fs = require('fs');
+const path = require('path');
+
+const voices = ['xiaoxiao', 'xiaoyi', 'yunxia', 'yunxi'];
+const clipTypes = ['intro', 't1', 't2', 'ans', 'win'];
+let missingClips = 0;
+
+for (let id = 1; id <= 30; id++) {
+  clipTypes.forEach(type => {
+    const filename = `p${id}_${type}.mp3`;
+    voices.forEach(v => {
+      const pth = path.join(__dirname, '..', 'assets', 'audio', v, filename);
+      if (!fs.existsSync(pth)) {
+        console.error(`❌ 缺失语音资产: ${v}/${filename}`);
+        missingClips++;
+      }
+    });
+  });
+}
+
+if (missingClips > 0) {
+  throw new Error(`共发现 ${missingClips} 个缺失的关卡 TTS 语音文件！`);
+}
+
+// 检查 sw.js 包含 p30 语音
+const swContent = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf-8');
+if (!swContent.includes('p30_win')) {
+  throw new Error('sw.js 缓存清单未包含 p30_win！');
+}
+
+// 检查 voice.js 不包含未实现的 /api/tts 接口调用
+const voiceContent = fs.readFileSync(path.join(__dirname, '..', 'js', 'voice.js'), 'utf-8');
+if (/['"`]\/api\/tts/.test(voiceContent)) {
+  throw new Error('js/voice.js 存在未实现的 /api/tts 调用！');
+}
+
+console.log('✅ 全部 30 关 4 套音色（共 600 个教学语音 MP3）及离线缓存清单校验通过！');
 console.log('====================================================');
 console.log('🎉 自动化测试通过，符合 AGENTS.md 准则！');
 console.log('====================================================');
