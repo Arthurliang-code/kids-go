@@ -20,11 +20,11 @@
             <key>PayloadDisplayName</key>
             <string>萌宝围棋 (离线版)</string>
             <key>PayloadIdentifier</key>
-            <string>com.kidsgo.offline.webclip.7ea3340c-4a77-4a29-9d4a-780fbcecd183</string>
+            <string>com.kidsgo.offline.webclip.55a3f9de-e984-403e-828e-a3b287426675</string>
             <key>PayloadType</key>
             <string>com.apple.webClip.managed</string>
             <key>PayloadUUID</key>
-            <string>7ea3340c-4a77-4a29-9d4a-780fbcecd183</string>
+            <string>55a3f9de-e984-403e-828e-a3b287426675</string>
             <key>PayloadVersion</key>
             <integer>1</integer>
             <key>Precomposed</key>
@@ -38,7 +38,7 @@
     <key>PayloadDisplayName</key>
     <string>萌宝少儿围棋 (iPad 纯离线独立桌面版)</string>
     <key>PayloadIdentifier</key>
-    <string>com.kidsgo.offline.profile.3929e030-39b2-4bbd-9bb0-4aa9b06910f1</string>
+    <string>com.kidsgo.offline.profile.e435a43d-ee7d-4a0a-8af8-225c4038ecfb</string>
     <key>PayloadOrganization</key>
     <string>Kids Go Studio</string>
     <key>PayloadRemovalDisallowed</key>
@@ -46,7 +46,7 @@
     <key>PayloadType</key>
     <string>Configuration</string>
     <key>PayloadUUID</key>
-    <string>3929e030-39b2-4bbd-9bb0-4aa9b06910f1</string>
+    <string>e435a43d-ee7d-4a0a-8af8-225c4038ecfb</string>
     <key>PayloadVersion</key>
     <integer>1</integer>
 </dict>
