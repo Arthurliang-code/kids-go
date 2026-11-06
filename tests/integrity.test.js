@@ -175,7 +175,12 @@ const fs = require('fs');
 const path = require('path');
 
 const voices = ['xiaoxiao', 'xiaoyi', 'yunxia', 'yunxi'];
-const clipTypes = ['intro', 't1', 't2', 'ans', 'win'];
+const clipTypes = ['intro', 't1', 't2', 'ans', 'win', 'wrong'];
+const universalTypes = [
+  'hint_coach', 'err_choice_badge', 'err_occupied', 'err_suicide', 
+  'err_false_eye', 'err_not_eye', 'err_goal', 'err_liberty',
+  'match_ai_atari', 'match_atari', 'match_capture', 'match_win', 'match_lose', 'match_promote'
+];
 let missingClips = 0;
 
 for (let id = 1; id <= 40; id++) {
@@ -183,16 +188,27 @@ for (let id = 1; id <= 40; id++) {
     const filename = `p${id}_${type}.mp3`;
     voices.forEach(v => {
       const pth = path.join(__dirname, '..', 'assets', 'audio', v, filename);
-      if (!fs.existsSync(pth)) {
-        console.error(`❌ 缺失语音资产: ${v}/${filename}`);
+      if (!fs.existsSync(pth) || fs.statSync(pth).size < 1000) {
+        console.error(`❌ 缺失或损坏关卡语音资产: ${v}/${filename}`);
         missingClips++;
       }
     });
   });
 }
 
+universalTypes.forEach(type => {
+  const filename = `${type}.mp3`;
+  voices.forEach(v => {
+    const pth = path.join(__dirname, '..', 'assets', 'audio', v, filename);
+    if (!fs.existsSync(pth) || fs.statSync(pth).size < 1000) {
+      console.error(`❌ 缺失或损坏交互提示音资产: ${v}/${filename}`);
+      missingClips++;
+    }
+  });
+});
+
 if (missingClips > 0) {
-  throw new Error(`共发现 ${missingClips} 个缺失的关卡 TTS 语音文件！`);
+  throw new Error(`共发现 ${missingClips} 个缺失的 TTS 语音文件！`);
 }
 
 // 检查 sw.js 包含 p40 语音
@@ -207,7 +223,7 @@ if (/['"`]\/api\/tts/.test(voiceContent)) {
   throw new Error('js/voice.js 存在未实现的 /api/tts 调用！');
 }
 
-console.log('✅ 全部 40 关 4 套音色（共 800 个教学语音 MP3）及离线缓存清单校验通过！');
+console.log('✅ 全部 40 关 4 套音色（共 1,016 个教学与交互提示语音 MP3）及离线缓存清单校验通过！');
 console.log('====================================================');
 console.log('🎉 自动化测试通过，符合 AGENTS.md 准则！');
 console.log('====================================================');

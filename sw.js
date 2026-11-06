@@ -1,6 +1,6 @@
-// sw.js - Service Worker 离线缓存引擎（v14 包含40关全量 Edge Neural 微软神经网络真声预缓存）
+// sw.js - Service Worker 离线缓存引擎（v15 包含40关全量 Edge Neural 微软神经网络真声及全部交互提示音预缓存）
 
-const CACHE_NAME = 'kids-go-v14-macro-vision';
+const CACHE_NAME = 'kids-go-v15-neural-hints';
 
 const STATIC_ASSETS = [
   './',
@@ -26,6 +26,12 @@ const VOICE_PACKS = [
 ];
 
 const BASE_AUDIO_CLIPS = [
+  'hint_coach',
+  'err_choice_badge',
+  'err_occupied',
+  'err_suicide',
+  'err_false_eye',
+  'err_not_eye',
   'err_goal',
   'err_liberty',
   'match_capture',
@@ -33,51 +39,19 @@ const BASE_AUDIO_CLIPS = [
   'match_ai_atari',
   'match_win',
   'match_promote',
-  'match_lose',
-  'p1_intro', 'p1_win', 'p1_t1', 'p1_t2', 'p1_ans',
-  'p2_intro', 'p2_win', 'p2_t1', 'p2_t2', 'p2_ans',
-  'p3_intro', 'p3_win', 'p3_t1', 'p3_t2', 'p3_ans',
-  'p4_intro', 'p4_win', 'p4_t1', 'p4_t2', 'p4_ans',
-  'p5_intro', 'p5_win', 'p5_t1', 'p5_t2', 'p5_ans',
-  'p6_intro', 'p6_win', 'p6_t1', 'p6_t2', 'p6_ans',
-  'p7_intro', 'p7_win', 'p7_t1', 'p7_t2', 'p7_ans',
-  'p8_intro', 'p8_win', 'p8_t1', 'p8_t2', 'p8_ans',
-  'p9_intro', 'p9_win', 'p9_t1', 'p9_t2', 'p9_ans',
-  'p10_intro', 'p10_win', 'p10_t1', 'p10_t2', 'p10_ans',
-  'p11_intro', 'p11_win', 'p11_t1', 'p11_t2', 'p11_ans',
-  'p12_intro', 'p12_win', 'p12_t1', 'p12_t2', 'p12_ans',
-  'p13_intro', 'p13_win', 'p13_t1', 'p13_t2', 'p13_ans',
-  'p14_intro', 'p14_win', 'p14_t1', 'p14_t2', 'p14_ans',
-  'p15_intro', 'p15_win', 'p15_t1', 'p15_t2', 'p15_ans',
-  'p16_intro', 'p16_win', 'p16_t1', 'p16_t2', 'p16_ans',
-  'p17_intro', 'p17_win', 'p17_t1', 'p17_t2', 'p17_ans',
-  'p18_intro', 'p18_win', 'p18_t1', 'p18_t2', 'p18_ans',
-  'p19_intro', 'p19_win', 'p19_t1', 'p19_t2', 'p19_ans',
-  'p20_intro', 'p20_win', 'p20_t1', 'p20_t2', 'p20_ans',
-  'p21_intro', 'p21_win', 'p21_t1', 'p21_t2', 'p21_ans',
-  'p22_intro', 'p22_win', 'p22_t1', 'p22_t2', 'p22_ans',
-  'p23_intro', 'p23_win', 'p23_t1', 'p23_t2', 'p23_ans',
-  'p24_intro', 'p24_win', 'p24_t1', 'p24_t2', 'p24_ans',
-  'p25_intro', 'p25_win', 'p25_t1', 'p25_t2', 'p25_ans',
-  'p26_intro', 'p26_win', 'p26_t1', 'p26_t2', 'p26_ans',
-  'p27_intro', 'p27_win', 'p27_t1', 'p27_t2', 'p27_ans',
-  'p28_intro', 'p28_win', 'p28_t1', 'p28_t2', 'p28_ans',
-  'p29_intro', 'p29_win', 'p29_t1', 'p29_t2', 'p29_ans',
-  'p30_intro', 'p30_win', 'p30_t1', 'p30_t2', 'p30_ans',
-  'p31_intro', 'p31_win', 'p31_t1', 'p31_t2', 'p31_ans',
-  'p32_intro', 'p32_win', 'p32_t1', 'p32_t2', 'p32_ans',
-  'p33_intro', 'p33_win', 'p33_t1', 'p33_t2', 'p33_ans',
-  'p34_intro', 'p34_win', 'p34_t1', 'p34_t2', 'p34_ans',
-  'p35_intro', 'p35_win', 'p35_t1', 'p35_t2', 'p35_ans',
-  'p36_intro', 'p36_win', 'p36_t1', 'p36_t2', 'p36_ans',
-  'p37_intro', 'p37_win', 'p37_t1', 'p37_t2', 'p37_ans',
-  'p38_intro', 'p38_win', 'p38_t1', 'p38_t2', 'p38_ans',
-  'p39_intro', 'p39_win', 'p39_t1', 'p39_t2', 'p39_ans',
-  'p40_intro', 'p40_win', 'p40_t1', 'p40_t2', 'p40_ans'
+  'match_lose'
 ];
 
+// 包含全量关卡语音 p1_intro ~ p40_win, p40_wrong
+const PUZZLE_AUDIO_CLIPS = [];
+for (let id = 1; id <= 40; id++) {
+  ['intro', 'win', 't1', 't2', 'ans', 'wrong'].forEach(type => {
+    PUZZLE_AUDIO_CLIPS.push(`p${id}_${type}`);
+  });
+}
+
 VOICE_PACKS.forEach(pack => {
-  BASE_AUDIO_CLIPS.forEach(clip => {
+  [...BASE_AUDIO_CLIPS, ...PUZZLE_AUDIO_CLIPS].forEach(clip => {
     STATIC_ASSETS.push(`./assets/audio/${pack.name}/${clip}.${pack.ext}`);
   });
 });

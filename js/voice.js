@@ -144,10 +144,30 @@ const VoiceNarrator = (() => {
     playClip(clipName, fallbackText, isManual);
   }
 
-  // 朗读错误引导（使用预生成的微软 Neural 原声包 err_liberty.mp3 / err_goal.mp3）
+  // 朗读错误引导（使用预生成的微软 Neural 原声包 err_liberty / err_goal / err_occupied / err_suicide / err_false_eye / err_not_eye / err_choice_badge）
   function speakError(errType, fallbackText = '', isManual = false) {
-    const clipName = errType === 'liberty' ? 'err_liberty' : 'err_goal';
+    const errMap = {
+      liberty: 'err_liberty',
+      goal: 'err_goal',
+      occupied: 'err_occupied',
+      suicide: 'err_suicide',
+      false_eye: 'err_false_eye',
+      not_eye: 'err_not_eye',
+      choice_badge: 'err_choice_badge'
+    };
+    const clipName = errMap[errType] || 'err_goal';
     playClip(clipName, fallbackText, isManual);
+  }
+
+  // 朗读关卡专属错误/陷阱引导（使用预生成的微软 Neural 原声包 p{id}_wrong.mp3）
+  function speakWrong(puzzleId, fallbackText = '', isManual = false) {
+    const clipName = `p${puzzleId}_wrong`;
+    playClip(clipName, fallbackText, isManual);
+  }
+
+  // 朗读对弈导师锦囊支招（使用预生成的微软 Neural 原声包 hint_coach.mp3）
+  function speakHint(fallbackText = '', isManual = true) {
+    playClip('hint_coach', fallbackText, isManual);
   }
 
   // 朗读对弈事件（提子、打吃、胜利、晋级等）
@@ -229,6 +249,8 @@ const VoiceNarrator = (() => {
     speakAnswer,
     speakSuccess,
     speakError,
+    speakWrong,
+    speakHint,
     speakMatchEvent,
     speak,
     stop,

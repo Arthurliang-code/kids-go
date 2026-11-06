@@ -956,7 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
         SoundEffects.playGentleError();
         petSpeech.textContent = "请直接点击棋盘上发光的 A 或 B 徽章做大局决定哦！";
         if (VoiceNarrator.isEnabled()) {
-          VoiceNarrator.speak(petSpeech.textContent, false);
+          VoiceNarrator.speakError('choice_badge', petSpeech.textContent);
         }
         return;
       }
@@ -966,7 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const bestChoice = puzzle.choices.find(c => c.isBest);
         petSpeech.textContent = `哎呀！选择 ${clickedChoice.label}【${clickedChoice.name}】只得 ${clickedChoice.value} 目小利；而选择 ${bestChoice.label}【${bestChoice.name}】足足能圈出 ${bestChoice.value} 目大庄园！快试试点 ${bestChoice.label} 吧！`;
         if (VoiceNarrator.isEnabled()) {
-          VoiceNarrator.speak(petSpeech.textContent, false);
+          VoiceNarrator.speakWrong(puzzle.id, petSpeech.textContent);
         }
         return;
       }
@@ -1040,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
           petSpeech.textContent = "这里黑棋落子后还有气，是可以安全下子的地方哦！请找一找被四颗白棋堵在正中间、0口气的【禁着点】吧~";
         }
         if (VoiceNarrator.isEnabled()) {
-          VoiceNarrator.speak(petSpeech.textContent, false);
+          VoiceNarrator.speakError('suicide', petSpeech.textContent);
         }
       }
       return;
@@ -1069,7 +1069,7 @@ document.addEventListener('DOMContentLoaded', () => {
           petSpeech.textContent = "这里不是眼位哦！眼位是被白棋包围的空位，请找找看哪只眼是缺少斜角保护的【假眼】吧！";
         }
         if (VoiceNarrator.isEnabled()) {
-          VoiceNarrator.speak(petSpeech.textContent, false);
+          VoiceNarrator.speakError('false_eye', petSpeech.textContent);
         }
       }
       return;
@@ -1080,6 +1080,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (engine.board[gy][gx] !== EMPTY) {
         SoundEffects.playGentleError();
         petSpeech.textContent = "这里已经有棋子啦，请下在空的交叉点上哦！";
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speakError('occupied', petSpeech.textContent);
+        }
         return;
       }
 
@@ -1102,17 +1105,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (customHint) {
           petSpeech.textContent = customHint;
           if (VoiceNarrator.isEnabled()) {
-            VoiceNarrator.speak(customHint, false);
+            VoiceNarrator.speakWrong(puzzle.id, customHint);
           }
         } else {
           const test = engine.testMove(gx, gy, puzzle.playerColor);
           if (!test.valid) {
             petSpeech.textContent = `这里不能下哦：${test.reason}`;
+            if (VoiceNarrator.isEnabled()) {
+              VoiceNarrator.speakError('suicide', petSpeech.textContent);
+            }
           } else {
-            petSpeech.textContent = "这一步没有达到最佳效果呢，可以点【📖 再看教学】复习一下技巧哦！";
-          }
-          if (VoiceNarrator.isEnabled()) {
-            VoiceNarrator.speakError('goal', petSpeech.textContent);
+            petSpeech.textContent = "这一步没有达到最佳效果呢，可以点【📖 看原理图解】复习一下技巧哦！";
+            if (VoiceNarrator.isEnabled()) {
+              VoiceNarrator.speakWrong(puzzle.id, petSpeech.textContent);
+            }
           }
         }
       }
@@ -1233,6 +1239,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!res.success) {
       SoundEffects.playGentleError();
       petSpeech.textContent = `这里不能下：${res.reason}`;
+      if (VoiceNarrator.isEnabled()) {
+        if (engine.board[gy][gx] !== EMPTY) {
+          VoiceNarrator.speakError('occupied', petSpeech.textContent);
+        } else {
+          VoiceNarrator.speakError('suicide', petSpeech.textContent);
+        }
+      }
       return;
     }
     updateCachedInfluence();
@@ -2069,7 +2082,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 熊猫导师锦囊妙计 (Hint) —— 结合 20 关教学棋理讲解为什么下这里
+  // 熊猫导师锦囊妙计 (Hint) —— 结合 40 关教学棋理讲解为什么下这里
   btnHint.onclick = () => {
     SoundEffects.playClick();
     const legal = engine.getLegalMoves(BLACK);
@@ -2080,6 +2093,9 @@ document.addEventListener('DOMContentLoaded', () => {
         hintCoord = { gx: hint.x, gy: hint.y };
         drawBoard();
         renderSpeechWithLessonLink(hint.coachText, hint.levelId, hint.tacticName, false);
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speakHint(hint.coachText);
+        }
         hintTimer = setTimeout(() => {
           clearHint();
           drawBoard();
