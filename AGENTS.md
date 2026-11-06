@@ -43,7 +43,7 @@ node -c js/go-engine.js && node -c js/puzzles.js && node -c js/ai.js && node -c 
 - 模拟 18K 至 1D 级别自对弈 30 手以上，验证走子逻辑无死循环或非法走子异常。
 
 ### 4. 语音 TTS 资产与降级链路校验 (Audio Reliability Check)
-- 验证所有关卡引用的音频片段（如 `p{id}_intro`, `p{id}_t1`, `p{id}_t2`, `p{id}_ans`, `p{id}_win`）均在 `assets/audio/` 存在对应 MP3，或具有严密的非阻塞静音降级机制。
+- 验证所有关卡引用的音频片段（如 `p{id}_intro`, `p{id}_t1`, `p{id}_t2`, `p{id}_ans`, `p{id}_win`, `p{id}_wrong` 以及全局交互提示音）均在 `assets/audio/` 存在对应 MP3，或具有严密的非阻塞静音降级机制。
 - 严禁向不存在的本地 `/api/tts` 发送会导致 404 并在移动端吞掉声音的请求。
 - 确认 Service Worker `sw.js` 与 `build_standalone.py` 包含对应关卡的语音映射。
 
@@ -57,7 +57,7 @@ node -c js/go-engine.js && node -c js/puzzles.js && node -c js/ai.js && node -c 
 python3 build_standalone.py
 ```
 **标准**：
-- 成功输出 `萌宝少儿围棋_iPad离线单文件版.html`（含全部 Base64 内嵌语音，大小约 17~25MB）。
+- 成功输出 `萌宝少儿围棋_iPad离线单文件版.html`（含全部 1,016 条 Base64 内嵌语音，大小约 35~40MB）。
 - 成功输出 `KidsGo_iPad_Offline.mobileconfig`。
 - 构建脚本执行退出码为 0，无正则转义或文件读写报错。
 
