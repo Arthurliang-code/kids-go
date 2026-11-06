@@ -64,11 +64,12 @@
             </select>
           </div>
         </div>
-        <!-- 教学阶段切换：启蒙初级 vs 进阶中级 vs 神算高级 -->
+        <!-- 教学阶段切换：启蒙初级 vs 进阶中级 vs 神算高级 vs 宏观大局 -->
         <div class="stage-switcher" id="stageSwitcher">
           <button class="stage-pill active" id="btnStageBeginner">🌱 启蒙初级 (1~10关)</button>
           <button class="stage-pill" id="btnStageIntermediate">🔥 进阶中级 (11~20关)</button>
           <button class="stage-pill" id="btnStageAdvanced">👑 神算高级 (21~30关)</button>
+          <button class="stage-pill" id="btnStageMaster">🦅 宏观大局 (31~40关)</button>
         </div>
         <div class="level-chips-scroll" id="levelChipsContainer">
           <!-- 动态生成 1~10 关卡胶囊 -->
@@ -86,7 +87,7 @@
               <span class="level-title-large">围棋小大师荣誉勋章馆</span>
             </div>
             <div class="badge-count-badge">
-              已点亮 <span id="unlockedBadgesCount" class="badge-highlight-num">0</span> / 30 枚
+              已点亮 <span id="unlockedBadgesCount" class="badge-highlight-num">0</span> / 40 枚
             </div>
           </div>
           <p class="badge-hero-subtitle">挑战知识闯关或段位升级，点亮你的璀璨荣誉之章！</p>
@@ -227,9 +228,9 @@
           <div class="toggle-row">
             <span>对战玩法</span>
             <select id="selectGameMode" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ddd; font-weight: 700; background: #fff;">
-              <option value="capture" data-target="5" selected>吃子棋 (先吃5子赢)</option>
-              <option value="capture" data-target="3">吃子棋 (先吃3子赢)</option>
-              <option value="territory">标准围地数子</option>
+              <option value="capture" data-target="5" selected>⚔️ 吃子大战 (先吃5子赢)</option>
+              <option value="capture" data-target="3">⚔️ 吃子大战 (先吃3子赢)</option>
+              <option value="territory">🏰 庄园争夺战 (比地盘谁大)</option>
             </select>
           </div>
         </div>
@@ -239,6 +240,14 @@
           <span>🟢 气数与危险预警提示</span>
           <label class="switch">
             <input type="checkbox" id="toggleLiberties">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <span>🗺️ 地盘与势力雷达 (看得见的庄园)</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleRadar">
             <span class="slider"></span>
           </label>
         </div>

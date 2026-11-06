@@ -301,6 +301,61 @@ class GoEngine {
     };
   }
 
+  // 实时全盘势力与地盘雷达图（Influence Map）
+  // 结合落子辐射场强与确定性围空，返回每个格点的势力倾向值 (-1.0 ~ +1.0)
+  calculateInfluenceMap(board = this.board, size = this.size) {
+    const influence = Array(size).fill(0).map(() => Array(size).fill(0));
+    const territoryData = this.estimateTerritory();
+
+    // 1. 各棋子根据距离向周围网格辐射势力
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const color = board[y][x];
+        if (color === EMPTY) continue;
+        const sign = color === BLACK ? 1 : -1;
+
+        // 本身占据点赋予高强度
+        influence[y][x] += sign * 1.5;
+
+        // 向辐射半径 3.2 范围扩散
+        for (let py = 0; py < size; py++) {
+          for (let px = 0; px < size; px++) {
+            if (px === x && py === y) continue;
+            const dist = Math.hypot(x - px, y - py);
+            if (dist > 3.2) continue;
+            const weight = 1 / (1 + dist * 1.35);
+            influence[py][px] += sign * weight;
+          }
+        }
+      }
+    }
+
+    // 2. 结合确定实空 (Territory) 与归一化
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (territoryData.territoryMap[y][x] === BLACK) {
+          influence[y][x] = Math.max(influence[y][x], 1.2);
+        } else if (territoryData.territoryMap[y][x] === WHITE) {
+          influence[y][x] = Math.min(influence[y][x], -1.2);
+        }
+        // 双曲正切平滑归一化到 [-1, 1]
+        influence[y][x] = Math.tanh(influence[y][x]);
+      }
+    }
+
+    return {
+      influence,
+      territoryData
+    };
+  }
+
+  // 静态工具方法：快速计算指定盘面的势力与地盘
+  static calculateInfluence(board, size) {
+    const tempEng = new GoEngine(size);
+    tempEng.loadBoard(board);
+    return tempEng.calculateInfluenceMap(board, size);
+  }
+
   // 导出/导入盘面状态（用于题库初始化）
   loadBoard(matrix, turn = BLACK) {
     this.reset(matrix.length);

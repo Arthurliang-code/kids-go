@@ -1,6 +1,6 @@
-// sw.js - Service Worker 离线缓存引擎（v13 包含30关全量 Edge Neural 微软神经网络真声预缓存）
+// sw.js - Service Worker 离线缓存引擎（v14 包含40关全量 Edge Neural 微软神经网络真声预缓存）
 
-const CACHE_NAME = 'kids-go-v13-neural-p30';
+const CACHE_NAME = 'kids-go-v14-macro-vision';
 
 const STATIC_ASSETS = [
   './',
@@ -63,7 +63,17 @@ const BASE_AUDIO_CLIPS = [
   'p27_intro', 'p27_win', 'p27_t1', 'p27_t2', 'p27_ans',
   'p28_intro', 'p28_win', 'p28_t1', 'p28_t2', 'p28_ans',
   'p29_intro', 'p29_win', 'p29_t1', 'p29_t2', 'p29_ans',
-  'p30_intro', 'p30_win', 'p30_t1', 'p30_t2', 'p30_ans'
+  'p30_intro', 'p30_win', 'p30_t1', 'p30_t2', 'p30_ans',
+  'p31_intro', 'p31_win', 'p31_t1', 'p31_t2', 'p31_ans',
+  'p32_intro', 'p32_win', 'p32_t1', 'p32_t2', 'p32_ans',
+  'p33_intro', 'p33_win', 'p33_t1', 'p33_t2', 'p33_ans',
+  'p34_intro', 'p34_win', 'p34_t1', 'p34_t2', 'p34_ans',
+  'p35_intro', 'p35_win', 'p35_t1', 'p35_t2', 'p35_ans',
+  'p36_intro', 'p36_win', 'p36_t1', 'p36_t2', 'p36_ans',
+  'p37_intro', 'p37_win', 'p37_t1', 'p37_t2', 'p37_ans',
+  'p38_intro', 'p38_win', 'p38_t1', 'p38_t2', 'p38_ans',
+  'p39_intro', 'p39_win', 'p39_t1', 'p39_t2', 'p39_ans',
+  'p40_intro', 'p40_win', 'p40_t1', 'p40_t2', 'p40_ans'
 ];
 
 VOICE_PACKS.forEach(pack => {

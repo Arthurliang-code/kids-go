@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnPass = document.getElementById('btnPass');
   const btnHint = document.getElementById('btnHint');
   const toggleLiberties = document.getElementById('toggleLiberties');
+  const toggleRadar = document.getElementById('toggleRadar');
   const toggleSound = document.getElementById('toggleSound');
   const selectBoardSize = document.getElementById('selectBoardSize');
   const selectGameMode = document.getElementById('selectGameMode');
@@ -45,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnStageBeginner = document.getElementById('btnStageBeginner');
   const btnStageIntermediate = document.getElementById('btnStageIntermediate');
   const btnStageAdvanced = document.getElementById('btnStageAdvanced');
+  const btnStageMaster = document.getElementById('btnStageMaster');
   const petCard = document.getElementById('petCard');
   const academyStepPills = document.getElementById('academyStepPills');
   const btnTabPractice = document.getElementById('btnTabPractice');
@@ -125,11 +127,20 @@ document.addEventListener('DOMContentLoaded', () => {
   let hintCoord = null;         // 熊猫支招专属提示坐标
   let hintTimer = null;         // 支招高亮定时器
   let showLiberties = false;    // 气数与危险预警提示默认关闭，可在侧边栏开关手动开启
+  let isRadarEnabled = false;   // 地盘与势力雷达（看得见的庄园）
+  let cachedInfluence = null;   // 缓存当前盘面的势力计算结果
   let isAITurn = false;
   let aiTimer = null;           // 托管 AI 延时走子定时器，避免模式切换/悔棋竞态穿透
   let isCaptureGameMode = true; // 初学吃子模式 vs 常规数地模式
   let targetCaptures = 5;       // 默认吃满5子获胜（充裕中盘手筋与死活交锋空间）
   let usedTesujiInMatch = new Set(); // 对弈模式下手筋触发去重集合（降噪体验）
+
+  // 更新地盘势力雷达缓存
+  function updateCachedInfluence() {
+    if (engine && typeof engine.calculateInfluenceMap === 'function') {
+      cachedInfluence = engine.calculateInfluenceMap();
+    }
+  }
 
   // 竞态定时器与提示光圈清理工具函数
   function clearAITimer() {
@@ -293,6 +304,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.clearRect(0, 0, w, h);
     updateTurnIndicator();
 
+    // 绘制半透明地盘势力雷达底层（仅在开关开启且有缓存时绘制，位于格线和棋子之下）
+    if (isRadarEnabled && cachedInfluence) {
+      drawInfluenceLayer(cachedInfluence, cellSize, margin, size);
+    }
+
     // 棋盘格线
     ctx.strokeStyle = '#5a3d1b';
     ctx.lineWidth = 1.6;
@@ -409,6 +425,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (showPuzzleAnswer && !isAnimatingFollowUp) {
         drawPuzzleAnswerOverlay(puzzle, stoneRadius, cellSize);
       }
+
+      // 二选一宏观抉择题：绘制 A / B 闪烁呼吸徽章
+      if (puzzle.type === 'choice_comparison' && Array.isArray(puzzle.choices) && !isAnimatingFollowUp) {
+        drawChoiceComparisonBadges(puzzle.choices, stoneRadius, cellSize);
+      }
     }
 
     // 触控悬浮半透明棋子预落子投影（仅在练习或对战且未锁定时显示）
@@ -443,6 +464,84 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.fillText('💡', pt.px, pt.py);
       ctx.restore();
     }
+  }
+
+  // 绘制半透明地盘势力雷达（黑方翠绿，白方暖橙，直观呈现庄园版图）
+  function drawInfluenceLayer(cachedInf, cellSize, margin, size) {
+    if (!cachedInf || !cachedInf.influence) return;
+    const inf = cachedInf.influence;
+    ctx.save();
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const val = inf[y][x];
+        if (Math.abs(val) < 0.15) continue;
+        const pt = gridToPixel(x, y);
+        const alpha = Math.min(0.36, Math.abs(val) * 0.38);
+        ctx.fillStyle = val > 0
+          ? `rgba(46, 213, 115, ${alpha.toFixed(3)})`
+          : `rgba(255, 165, 2, ${alpha.toFixed(3)})`;
+        const r = cellSize * 0.45;
+        ctx.beginPath();
+        ctx.arc(pt.px, pt.py, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // 绘制二选一宏观抉择题的 A / B 闪烁呼吸徽章
+  function drawChoiceComparisonBadges(choices, stoneRadius, cellSize) {
+    ctx.save();
+    choices.forEach(c => {
+      const pt = gridToPixel(c.x, c.y);
+      const isBest = !!c.isBest;
+
+      // 闪烁光晕外圈
+      ctx.beginPath();
+      ctx.arc(pt.px, pt.py, stoneRadius * 0.92, 0, Math.PI * 2);
+      ctx.strokeStyle = isBest ? '#2ed573' : '#ffa502';
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+
+      // 内层徽章底色
+      ctx.beginPath();
+      ctx.arc(pt.px, pt.py, stoneRadius * 0.68, 0, Math.PI * 2);
+      ctx.fillStyle = isBest ? '#2ed573' : '#ffa502';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // 字母 A / B
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${Math.max(14, Math.floor(stoneRadius * 0.72))}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(c.label, pt.px, pt.py);
+
+      // 下方说明胶囊条
+      const pillY = pt.py + stoneRadius * 0.98;
+      ctx.font = `bold ${Math.max(11, Math.floor(cellSize * 0.22))}px sans-serif`;
+      const txt = `${c.label}: ${c.name}`;
+      const txtWidth = ctx.measureText(txt).width;
+      const padX = 8;
+      const pillH = 20;
+
+      ctx.fillStyle = 'rgba(47, 53, 66, 0.92)';
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(pt.px - txtWidth / 2 - padX, pillY, txtWidth + padX * 2, pillH, 10);
+      } else {
+        ctx.rect(pt.px - txtWidth / 2 - padX, pillY, txtWidth + padX * 2, pillH);
+      }
+      ctx.fill();
+
+      ctx.fillStyle = isBest ? '#2ed573' : '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(txt, pt.px, pillY + pillH / 2);
+    });
+    ctx.restore();
   }
 
   // 绘制课前教学步骤的可视化辅助图层（呼吸连线、方向箭头、正误与要点角标）
@@ -850,6 +949,39 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // 类型 A0: 二选一宏观抉择题（大场 vs 蝇头小利，第31/32/33/35/36关等）
+    if (puzzle.type === 'choice_comparison') {
+      const clickedChoice = puzzle.choices && puzzle.choices.find(c => c.x === gx && c.y === gy);
+      if (!clickedChoice) {
+        SoundEffects.playGentleError();
+        petSpeech.textContent = "请直接点击棋盘上发光的 A 或 B 徽章做大局决定哦！";
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speak(petSpeech.textContent, false);
+        }
+        return;
+      }
+
+      if (!clickedChoice.isBest) {
+        SoundEffects.playGentleError();
+        const bestChoice = puzzle.choices.find(c => c.isBest);
+        petSpeech.textContent = `哎呀！选择 ${clickedChoice.label}【${clickedChoice.name}】只得 ${clickedChoice.value} 目小利；而选择 ${bestChoice.label}【${bestChoice.name}】足足能圈出 ${bestChoice.value} 目大庄园！快试试点 ${bestChoice.label} 吧！`;
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speak(petSpeech.textContent, false);
+        }
+        return;
+      }
+
+      // 选中最佳大场！
+      const res = engine.play(clickedChoice.x, clickedChoice.y, puzzle.playerColor);
+      if (res.success) {
+        SoundEffects.playStone();
+        updateCachedInfluence();
+        drawBoard();
+        playPuzzleFollowUpAndComplete(puzzle);
+      }
+      return;
+    }
+
     // 类型 A1: 识别棋子的气（第1关、第2关）
     if (puzzle.type === 'identify_liberties') {
       const key = `${gx},${gy}`;
@@ -1103,6 +1235,7 @@ document.addEventListener('DOMContentLoaded', () => {
       petSpeech.textContent = `这里不能下：${res.reason}`;
       return;
     }
+    updateCachedInfluence();
 
     lastMoveWasPlayerTesuji = false;
     const playerTesuji = ai.analyzePlayerMove(prevEngine, engine, gx, gy, playColor, res.captures);
@@ -1173,6 +1306,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const res = engine.play(best.x, best.y, aiColor);
     if (res.success) {
+      updateCachedInfluence();
       if (res.captures.length > 0) {
         SoundEffects.playCapture();
         if (best.coachInfo && best.coachInfo.levelId >= 7) {
@@ -1238,6 +1372,15 @@ document.addEventListener('DOMContentLoaded', () => {
         handleGameOver(false, `萌宠率先吃满了 ${targetCaptures} 颗棋子哦！`);
         return true;
       }
+    } else {
+      // 庄园争夺战（点目模式）：局数手数上限检测（7路28手 / 9路36手 / 13路60手）
+      const maxMoves = engine.size === 7 ? 28 : (engine.size === 9 ? 36 : 60);
+      if (engine.history.length >= maxMoves) {
+        const est = engine.estimateTerritory();
+        const playerWon = est.blackScore > est.whiteScore;
+        handleGameOver(playerWon, `已达手数上限（${engine.history.length}手）！秋收大丰收结算：黑棋 ${est.blackScore} 目 vs 白棋 ${est.whiteScore} 目`);
+        return true;
+      }
     }
 
     // 连续两次虚手或无子可下
@@ -1247,7 +1390,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (last.lastMove && last.lastMove.pass && prev.lastMove && prev.lastMove.pass) {
         const est = engine.estimateTerritory();
         const playerWon = est.blackScore > est.whiteScore;
-        handleGameOver(playerWon, `黑棋 ${est.blackScore} 目 vs 白棋 ${est.whiteScore} 目`);
+        handleGameOver(playerWon, `双方连续停手终局！秋收大丰收：黑棋 ${est.blackScore} 目 vs 白棋 ${est.whiteScore} 目`);
         return true;
       }
     }
@@ -1608,12 +1751,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 阶段切换：'beginner' (1~10关), 'intermediate' (11~20关) 或 'advanced' (21~30关)
+  // 阶段切换：'beginner' (1~10关), 'intermediate' (11~20关), 'advanced' (21~30关) 或 'master' (31~40关)
   function switchStage(stage, targetIndex = null) {
     currentStage = stage;
     if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
     if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
     if (btnStageAdvanced) btnStageAdvanced.classList.toggle('active', currentStage === 'advanced');
+    if (btnStageMaster) btnStageMaster.classList.toggle('active', currentStage === 'master');
 
     if (targetIndex !== null) {
       loadPuzzle(targetIndex, true);
@@ -1626,6 +1770,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (currentStage === 'advanced') {
         minIdx = 20;
         maxIdx = 29;
+      } else if (currentStage === 'master') {
+        minIdx = 30;
+        maxIdx = 39;
       }
       if (currentPuzzleIndex < minIdx || currentPuzzleIndex > maxIdx) {
         loadPuzzle(minIdx, true);
@@ -1643,8 +1790,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (scoreBox) scoreBox.style.display = 'none';
     currentPuzzleIndex = index;
 
-    // 自动同步所属三阶段（初级 vs 中级 vs 高级）
-    if (index >= 20 && currentStage !== 'advanced') {
+    // 自动同步所属四阶段（初级 vs 中级 vs 高级 vs 大局）
+    if (index >= 30 && currentStage !== 'master') {
+      currentStage = 'master';
+    } else if (index >= 20 && index < 30 && currentStage !== 'advanced') {
       currentStage = 'advanced';
     } else if (index >= 10 && index < 20 && currentStage !== 'intermediate') {
       currentStage = 'intermediate';
@@ -1653,6 +1802,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const puzzle = PUZZLE_LEVELS[index];
+    updateCachedInfluence();
     if (startInTeach && puzzle.teachingSteps && puzzle.teachingSteps.length > 0) {
       startTeachingPhase(0);
     } else {
@@ -1660,7 +1810,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 渲染关卡选项卡（根据当前阶段展示 1~10、11~20 或 21~30 关，保持界面清爽大字号，方便触控）
+  // 渲染关卡选项卡（根据当前阶段展示 1~10、11~20、21~30 或 31~40 关，保持界面清爽大字号，方便触控）
   function renderLevelChips() {
     if (!levelChipsContainer) return;
     levelChipsContainer.innerHTML = '';
@@ -1669,6 +1819,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
     if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
     if (btnStageAdvanced) btnStageAdvanced.classList.toggle('active', currentStage === 'advanced');
+    if (btnStageMaster) btnStageMaster.classList.toggle('active', currentStage === 'master');
 
     let startIdx = 0;
     let endIdx = 10;
@@ -1678,6 +1829,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (currentStage === 'advanced') {
       startIdx = 20;
       endIdx = 30;
+    } else if (currentStage === 'master') {
+      startIdx = 30;
+      endIdx = 40;
     }
     const stagePuzzles = PUZZLE_LEVELS.slice(startIdx, endIdx);
 
@@ -1733,10 +1887,20 @@ document.addEventListener('DOMContentLoaded', () => {
     { name: "水底潜龙", icon: "🌊", desc: "掌握二路下水托渡连络" },
     { name: "迂回神算", icon: "🌀", desc: "掌握拐弯征子空间计算" },
     { name: "抢先收官", icon: "👑", desc: "掌握一线先手扳粘官子" },
-    { name: "围棋小大师", icon: "🌟", desc: "通关全部30关终极大考" }
+    { name: "围棋小大师", icon: "🌟", desc: "通关全部30关终极大考" },
+    { name: "金角小霸王", icon: "👑", desc: "掌握金角银边高效率" },
+    { name: "大局统帅", icon: "🦅", desc: "识破蝇头小利抢占大场" },
+    { name: "脱先勇士", icon: "⚡", desc: "告别二路爬行争夺先手" },
+    { name: "舍得大师", icon: "🎁", desc: "学会弃子争先构建外势" },
+    { name: "明察秋毫", icon: "🛡️", desc: "急所先补防患于未然" },
+    { name: "沉着冷静", icon: "🧘", desc: "活棋莫补果断脱先" },
+    { name: "步步为营", icon: "🏰", desc: "立足边线完美拆二" },
+    { name: "斩龙神将", icon: "⚔️", desc: "宏观分断敌方大龙" },
+    { name: "轻灵如燕", icon: "🕊️", desc: "妙手侵消压制大模样" },
+    { name: "秋收大庄主", icon: "🌾", desc: "终局点目收获金色庄园" }
   ];
 
-  // 渲染荣誉徽章馆（30关专属勋章 + 顶部荣誉进度条）
+  // 渲染荣誉徽章馆（40关专属勋章 + 顶部荣誉进度条）
   function renderBadges() {
     const badgeGrid = document.getElementById('badgeGrid');
     if (!badgeGrid) return;
@@ -1773,10 +1937,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const size = parseInt(selectBoardSize.value, 10);
     engine.reset(size);
     isAITurn = false;
+    updateCachedInfluence();
     updateScoreDisplay();
     updatePetCard();
     const r = ai.getCurrentRank();
-    petSpeech.textContent = `新对局开始！你执 ⚫黑棋 先下，我（${r.animal}）执 ⚪白棋，加油哦！`;
+    petSpeech.textContent = isCaptureGameMode
+      ? `新对局开始！你执 ⚫黑棋 先下，我（${r.animal}）执 ⚪白棋，率先吃满 ${targetCaptures} 子获胜，加油哦！`
+      : `🏰 庄园争夺战开始！你执 ⚫黑棋 先下，终局比拼谁圈的庄园大！加油哦！`;
     resizeCanvas();
   }
 
@@ -1865,6 +2032,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 撤回玩家和 AI 各一步
       engine.undo();
       engine.undo();
+      updateCachedInfluence();
       drawBoard();
       updateScoreDisplay();
       petSpeech.textContent = "好的，时光倒流！重新走一步吧~";
@@ -1885,6 +2053,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearAITimer();
     clearHint();
     engine.pass();
+    updateCachedInfluence();
     petSpeech.textContent = "黑棋选择虚手（停一手），轮到萌宠啦！";
     drawBoard();
     if (!checkGameEnd()) {
@@ -1924,6 +2093,15 @@ document.addEventListener('DOMContentLoaded', () => {
     showLiberties = e.target.checked;
     drawBoard();
   };
+
+  // 地盘与势力雷达开关
+  if (toggleRadar) {
+    toggleRadar.onchange = (e) => {
+      isRadarEnabled = e.target.checked;
+      updateCachedInfluence();
+      drawBoard();
+    };
+  }
 
   // 声音开关
   toggleSound.onclick = () => {
@@ -1999,6 +2177,13 @@ document.addEventListener('DOMContentLoaded', () => {
     btnStageAdvanced.onclick = () => {
       SoundEffects.playClick();
       switchStage('advanced');
+    };
+  }
+
+  if (btnStageMaster) {
+    btnStageMaster.onclick = () => {
+      SoundEffects.playClick();
+      switchStage('master');
     };
   }
 

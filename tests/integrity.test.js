@@ -7,9 +7,9 @@ console.log('🚀 执行 AGENTS.md 规范：全量自动化闭环测试');
 console.log('====================================================');
 
 // 1. 题库完整性测试 (30关)
-console.log('\n[TEST 1] 题库数据结构与规则引擎闭环验证 (30关)...');
-if (PUZZLE_LEVELS.length !== 30) {
-  throw new Error(`预期 30 关，实际得到 ${PUZZLE_LEVELS.length} 关！`);
+console.log('\n[TEST 1] 题库数据结构与规则引擎闭环验证 (40关)...');
+if (PUZZLE_LEVELS.length !== 40) {
+  throw new Error(`预期 40 关，实际得到 ${PUZZLE_LEVELS.length} 关！`);
 }
 
 const engine = new GoEngine(9);
@@ -56,9 +56,9 @@ PUZZLE_LEVELS.forEach((p, idx) => {
 
   // 正解落子验证
   engine.loadBoard(p.initialBoard, p.playerColor || BLACK);
-  if (p.type === 'play_move') {
+  if (p.type === 'play_move' || p.type === 'choice_comparison') {
     if (!p.validMoves || p.validMoves.length === 0) {
-      throw new Error(`第 ${p.id} 关为 play_move 但缺少 validMoves！`);
+      throw new Error(`第 ${p.id} 关为 ${p.type} 但缺少 validMoves！`);
     }
     p.validMoves.forEach(vm => {
       if (p.initialBoard[vm.y][vm.x] !== 0) {
@@ -69,6 +69,19 @@ PUZZLE_LEVELS.forEach((p, idx) => {
         throw new Error(`第 ${p.id} 关正解落子 (${vm.x}, ${vm.y}) 不符合围棋规则：${testRes.reason}`);
       }
     });
+
+    if (p.type === 'choice_comparison') {
+      if (!p.choices || p.choices.length < 2) {
+        throw new Error(`第 ${p.id} 关为二选一宏观抉择题，但 choices 选项不足 2 项！`);
+      }
+      const best = p.choices.find(c => c.isBest);
+      if (!best) {
+        throw new Error(`第 ${p.id} 关 choices 未设置 isBest 推荐选项！`);
+      }
+      if (best.x !== p.validMoves[0].x || best.y !== p.validMoves[0].y) {
+        throw new Error(`第 ${p.id} 关 best choice 坐标与 validMoves[0] 不匹配！`);
+      }
+    }
   } else if (p.type === 'identify_liberties' || p.type === 'identify_false_eye' || p.type === 'identify_suicide') {
     if (!p.targetPoints || p.targetPoints.length === 0) {
       throw new Error(`第 ${p.id} 关为点击识别题，但缺少 targetPoints！`);
@@ -81,7 +94,7 @@ PUZZLE_LEVELS.forEach((p, idx) => {
   }
 });
 
-console.log('✅ 30 关全部通过尺寸、字段、图解与规则引擎合法性校验！');
+console.log('✅ 40 关全部通过尺寸、字段、图解、抉择项与规则引擎合法性校验！');
 
 // 2. AI 战术引擎与对弈模拟验证
 console.log('\n[TEST 2] AI 战术引擎与对弈模拟验证...');
@@ -165,7 +178,7 @@ const voices = ['xiaoxiao', 'xiaoyi', 'yunxia', 'yunxi'];
 const clipTypes = ['intro', 't1', 't2', 'ans', 'win'];
 let missingClips = 0;
 
-for (let id = 1; id <= 30; id++) {
+for (let id = 1; id <= 40; id++) {
   clipTypes.forEach(type => {
     const filename = `p${id}_${type}.mp3`;
     voices.forEach(v => {
@@ -182,10 +195,10 @@ if (missingClips > 0) {
   throw new Error(`共发现 ${missingClips} 个缺失的关卡 TTS 语音文件！`);
 }
 
-// 检查 sw.js 包含 p30 语音
+// 检查 sw.js 包含 p40 语音
 const swContent = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf-8');
-if (!swContent.includes('p30_win')) {
-  throw new Error('sw.js 缓存清单未包含 p30_win！');
+if (!swContent.includes('p40_win')) {
+  throw new Error('sw.js 缓存清单未包含 p40_win！');
 }
 
 // 检查 voice.js 不包含未实现的 /api/tts 接口调用
@@ -194,7 +207,7 @@ if (/['"`]\/api\/tts/.test(voiceContent)) {
   throw new Error('js/voice.js 存在未实现的 /api/tts 调用！');
 }
 
-console.log('✅ 全部 30 关 4 套音色（共 600 个教学语音 MP3）及离线缓存清单校验通过！');
+console.log('✅ 全部 40 关 4 套音色（共 800 个教学语音 MP3）及离线缓存清单校验通过！');
 console.log('====================================================');
 console.log('🎉 自动化测试通过，符合 AGENTS.md 准则！');
 console.log('====================================================');

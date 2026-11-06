@@ -1242,6 +1242,14 @@ class GoAI {
         }
       }
 
+      // 7b. 围地大局模式（庄园争夺战）：额外提升金角银边、占领星位与拆边的全局权重
+      if (!isCaptureMode) {
+        const posWeight = this.getPositionalWeight(x, y, engine.size);
+        if (posWeight >= 16) {
+          score += 24; // 鼓励占角守角与开阔大场
+        }
+      }
+
       // 8. 轻微随机扰动
       score += (Math.random() - 0.5) * 4;
 
