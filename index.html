@@ -51,7 +51,13 @@
     <section class="view-section active" id="viewAcademy">
       <div class="level-selector-card">
         <div class="level-header-row">
-          <span class="level-title-large">🌟 趣味知识闯关</span>
+          <div class="level-title-group">
+            <span class="level-title-large">🌟 趣味知识闯关</span>
+            <div class="quick-practice-pills">
+              <button class="quick-pill quick-pill-daily" id="btnStageDaily" title="每天精选3道巩固题">📅 每日三题 (<span id="dailyProgressBadge">0/3</span>)</button>
+              <button class="quick-pill quick-pill-wrong" id="btnStageWrong" title="专练做错过的题目">📌 错题本 (<span id="wrongCountBadge">0</span>)</button>
+            </div>
+          </div>
           <div class="voice-toolbar">
             <button class="voice-btn" id="btnSpeakInstruction">
               <span class="voice-icon">📢</span> <span id="voiceBtnText">听师傅读题</span>
@@ -64,15 +70,13 @@
             </select>
           </div>
         </div>
-        <!-- 教学阶段切换：启蒙初级 vs 进阶中级 vs 神算高级 vs 宏观大局 vs 连环实战 + 每日/错题 -->
+        <!-- 教学阶段切换：五大进阶阶段（1~50关） -->
         <div class="stage-switcher" id="stageSwitcher">
           <button class="stage-pill active" id="btnStageBeginner">🌱 启蒙初级 (1~10关)</button>
           <button class="stage-pill" id="btnStageIntermediate">🔥 进阶中级 (11~20关)</button>
           <button class="stage-pill" id="btnStageAdvanced">👑 神算高级 (21~30关)</button>
           <button class="stage-pill" id="btnStageMaster">🦅 宏观大局 (31~40关)</button>
           <button class="stage-pill" id="btnStageCombo">⚡ 连环实战 (41~50关)</button>
-          <button class="stage-pill stage-pill-special" id="btnStageDaily">📅 每日三题</button>
-          <button class="stage-pill stage-pill-special" id="btnStageWrong">📌 错题巩固 (<span id="wrongCountBadge">0</span>)</button>
         </div>
         <div class="level-chips-scroll" id="levelChipsContainer">
           <!-- 动态生成 1~10 关卡胶囊 -->

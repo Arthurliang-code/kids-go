@@ -740,20 +740,89 @@ input:checked + .slider:before {
 
 .level-header-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.level-title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
 }
 
 .level-title-large {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
   color: #ff4757;
 }
 
-/* 教学阶段切换器（启蒙初级 vs 进阶中级） */
-.stage-switcher {
+.quick-practice-pills {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-pill {
+  border: 2px solid transparent;
+  padding: 7px 14px;
+  min-height: 42px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.quick-pill-daily {
+  background: #eaf4ff;
+  color: #0984e3;
+  border-color: #bfe0ff;
+}
+
+.quick-pill-daily:hover,
+.quick-pill-daily.active {
+  background: #0984e3;
+  color: #ffffff;
+  border-color: #0984e3;
+  box-shadow: 0 3px 10px rgba(9, 132, 227, 0.25);
+}
+
+.quick-pill-daily.completed {
+  background: #e8f8f0;
+  color: #20bf6b;
+  border-color: #b8ebd0;
+}
+
+.quick-pill-wrong {
+  background: #fff5e6;
+  color: #e67e22;
+  border-color: #ffd8a8;
+}
+
+.quick-pill-wrong:hover,
+.quick-pill-wrong.active {
+  background: #e67e22;
+  color: #ffffff;
+  border-color: #e67e22;
+  box-shadow: 0 3px 10px rgba(230, 126, 34, 0.25);
+}
+
+.quick-pill-wrong.empty {
+  background: #f5f6fa;
+  color: #747d8c;
+  border-color: #e1e4eb;
+}
+
+/* 教学阶段切换器（五大进阶阶段） */
+.stage-switcher {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -1502,7 +1571,13 @@ input:checked + .slider:before {
     <section class="view-section active" id="viewAcademy">
       <div class="level-selector-card">
         <div class="level-header-row">
-          <span class="level-title-large">🌟 趣味知识闯关</span>
+          <div class="level-title-group">
+            <span class="level-title-large">🌟 趣味知识闯关</span>
+            <div class="quick-practice-pills">
+              <button class="quick-pill quick-pill-daily" id="btnStageDaily" title="每天精选3道巩固题">📅 每日三题 (<span id="dailyProgressBadge">0/3</span>)</button>
+              <button class="quick-pill quick-pill-wrong" id="btnStageWrong" title="专练做错过的题目">📌 错题本 (<span id="wrongCountBadge">0</span>)</button>
+            </div>
+          </div>
           <div class="voice-toolbar">
             <button class="voice-btn" id="btnSpeakInstruction">
               <span class="voice-icon">📢</span> <span id="voiceBtnText">听师傅读题</span>
@@ -1513,15 +1588,13 @@ input:checked + .slider:before {
             </select>
           </div>
         </div>
-        <!-- 教学阶段切换：启蒙初级 vs 进阶中级 vs 神算高级 vs 宏观大局 vs 连环实战 + 每日/错题 -->
+        <!-- 教学阶段切换：五大进阶阶段（1~50关） -->
         <div class="stage-switcher" id="stageSwitcher">
           <button class="stage-pill active" id="btnStageBeginner">🌱 启蒙初级 (1~10关)</button>
           <button class="stage-pill" id="btnStageIntermediate">🔥 进阶中级 (11~20关)</button>
           <button class="stage-pill" id="btnStageAdvanced">👑 神算高级 (21~30关)</button>
           <button class="stage-pill" id="btnStageMaster">🦅 宏观大局 (31~40关)</button>
           <button class="stage-pill" id="btnStageCombo">⚡ 连环实战 (41~50关)</button>
-          <button class="stage-pill stage-pill-special" id="btnStageDaily">📅 每日三题</button>
-          <button class="stage-pill stage-pill-special" id="btnStageWrong">📌 错题巩固 (<span id="wrongCountBadge">0</span>)</button>
         </div>
         <div class="level-chips-scroll" id="levelChipsContainer">
           <!-- 动态生成 1~10 关卡胶囊 -->
@@ -7806,6 +7879,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnStageCombo = document.getElementById('btnStageCombo');
   const btnStageDaily = document.getElementById('btnStageDaily');
   const btnStageWrong = document.getElementById('btnStageWrong');
+  const dailyProgressBadge = document.getElementById('dailyProgressBadge');
   const wrongCountBadge = document.getElementById('wrongCountBadge');
   const reviewControls = document.getElementById('reviewControls');
   const btnReviewPrev = document.getElementById('btnReviewPrev');
@@ -7982,6 +8056,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateWrongCountBadge() {
     const wrongTotal = Object.values(userProgress.wrongCounts || {}).filter(c => c > 0).length;
     if (wrongCountBadge) wrongCountBadge.textContent = String(wrongTotal);
+    if (btnStageWrong) btnStageWrong.classList.toggle('empty', wrongTotal === 0);
+
+    const dailyIds = getDailyChallengeIds();
+    const doneIds = (userProgress.dailyChallenge && Array.isArray(userProgress.dailyChallenge.doneIds))
+      ? userProgress.dailyChallenge.doneIds
+      : [];
+    const doneCount = dailyIds.filter(id => doneIds.includes(id)).length;
+    if (dailyProgressBadge) dailyProgressBadge.textContent = `${doneCount}/3`;
+    if (btnStageDaily) btnStageDaily.classList.toggle('completed', doneCount >= 3);
   }
 
   function recordPuzzleMistake(puzzleId) {
@@ -9118,6 +9201,51 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBadges();
 
     const proceedToNext = () => {
+      if (currentStage === 'daily') {
+        const dailyIds = getDailyChallengeIds();
+        const doneIds = (userProgress.dailyChallenge && userProgress.dailyChallenge.doneIds) || [];
+        const nextDailyId = dailyIds.find(id => id !== puzzle.id && !doneIds.includes(id));
+        if (nextDailyId) {
+          showVictoryModal({
+            title: `📅 今日三题已完成 ${doneIds.filter(id => dailyIds.includes(id)).length}/3！`,
+            desc: `${puzzle.successMsg}\n\n【知识点】：${puzzle.explain}`,
+            actionText: "继续下一道每日题！",
+            onAction: () => loadPuzzle(nextDailyId - 1)
+          });
+        } else {
+          showVictoryModal({
+            title: "🎉 今日三题全部打卡成功！",
+            desc: `${puzzle.successMsg}\n\n太棒啦！今天的 3 道巩固挑战已全部通关！`,
+            actionText: "回到正常闯关",
+            onAction: () => switchStage('beginner', 0)
+          });
+        }
+        return;
+      }
+
+      if (currentStage === 'wrong') {
+        const remainWrongIds = Object.entries(userProgress.wrongCounts || {})
+          .filter(([, cnt]) => cnt > 0)
+          .sort((a, b) => b[1] - a[1])
+          .map(([id]) => Number(id));
+        if (remainWrongIds.length > 0) {
+          showVictoryModal({
+            title: "📌 错题攻克成功！",
+            desc: `${puzzle.successMsg}\n\n还有 ${remainWrongIds.length} 道错题等你攻克，加油！`,
+            actionText: "攻克下一道错题！",
+            onAction: () => loadPuzzle(remainWrongIds[0] - 1)
+          });
+        } else {
+          showVictoryModal({
+            title: "🌟 错题本已全部清零！",
+            desc: `${puzzle.successMsg}\n\n所有做错过的题目都被你彻底掌握啦！`,
+            actionText: "回到正常闯关",
+            onAction: () => switchStage('beginner', 0)
+          });
+        }
+        return;
+      }
+
       showVictoryModal({
         title: "闯关大成功！★★★",
         desc: `${puzzle.successMsg}\n\n【知识点】：${puzzle.explain}`,
@@ -9780,6 +9908,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 阶段切换：'beginner' (1~10), 'intermediate' (11~20), 'advanced' (21~30), 'master' (31~40), 'combo' (41~50), 'daily' (每日三题), 'wrong' (错题巩固)
   function switchStage(stage, targetIndex = null) {
+    if (stage === 'wrong') {
+      const wrongIds = Object.entries(userProgress.wrongCounts || {})
+        .filter(([, cnt]) => cnt > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([id]) => Number(id));
+      if (wrongIds.length === 0) {
+        SoundEffects.playSuccess();
+        petSpeech.textContent = "🌟 太棒啦！目前错题本空空的，说明你做过的题目都掌握得很扎实哦！";
+        return;
+      }
+    }
+
     currentStage = stage;
     if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
     if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
@@ -9796,8 +9936,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (currentStage === 'daily') {
       const dailyIds = getDailyChallengeIds();
-      const firstId = dailyIds[0] || 1;
-      loadPuzzle(firstId - 1, true);
+      const doneIds = (userProgress.dailyChallenge && userProgress.dailyChallenge.doneIds) || [];
+      const firstUnfinished = dailyIds.find(id => !doneIds.includes(id)) || dailyIds[0] || 1;
+      loadPuzzle(firstUnfinished - 1, true);
       return;
     }
 
@@ -9806,12 +9947,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .filter(([, cnt]) => cnt > 0)
         .sort((a, b) => b[1] - a[1])
         .map(([id]) => Number(id));
-      if (wrongIds.length > 0) {
-        loadPuzzle(wrongIds[0] - 1, true);
-      } else {
-        renderLevelChips();
-        petSpeech.textContent = "太棒啦！目前错题本空空的，说明你每一关都掌握得很扎实哦！";
-      }
+      loadPuzzle(wrongIds[0] - 1, true);
       return;
     }
 

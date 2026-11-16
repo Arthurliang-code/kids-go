@@ -1,6 +1,6 @@
 // sw.js - Service Worker 离线缓存引擎（v16 包含50关全量 Edge Neural 微软神经网络真声、局后复盘及交互提示音预缓存）
 
-const CACHE_NAME = 'kids-go-v16-combo-review';
+const CACHE_NAME = 'kids-go-v16-combo-review-ux';
 
 const STATIC_ASSETS = [
   './',

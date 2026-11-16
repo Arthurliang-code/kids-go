@@ -721,20 +721,89 @@ input:checked + .slider:before {
 
 .level-header-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.level-title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
 }
 
 .level-title-large {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
   color: #ff4757;
 }
 
-/* 教学阶段切换器（启蒙初级 vs 进阶中级） */
-.stage-switcher {
+.quick-practice-pills {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-pill {
+  border: 2px solid transparent;
+  padding: 7px 14px;
+  min-height: 42px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.quick-pill-daily {
+  background: #eaf4ff;
+  color: #0984e3;
+  border-color: #bfe0ff;
+}
+
+.quick-pill-daily:hover,
+.quick-pill-daily.active {
+  background: #0984e3;
+  color: #ffffff;
+  border-color: #0984e3;
+  box-shadow: 0 3px 10px rgba(9, 132, 227, 0.25);
+}
+
+.quick-pill-daily.completed {
+  background: #e8f8f0;
+  color: #20bf6b;
+  border-color: #b8ebd0;
+}
+
+.quick-pill-wrong {
+  background: #fff5e6;
+  color: #e67e22;
+  border-color: #ffd8a8;
+}
+
+.quick-pill-wrong:hover,
+.quick-pill-wrong.active {
+  background: #e67e22;
+  color: #ffffff;
+  border-color: #e67e22;
+  box-shadow: 0 3px 10px rgba(230, 126, 34, 0.25);
+}
+
+.quick-pill-wrong.empty {
+  background: #f5f6fa;
+  color: #747d8c;
+  border-color: #e1e4eb;
+}
+
+/* 教学阶段切换器（五大进阶阶段） */
+.stage-switcher {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
