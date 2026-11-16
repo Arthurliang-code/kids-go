@@ -4,7 +4,20 @@
 
 ---
 
-## [v1.6.0] - 2026-11-16 (当前最新)
+## [v1.6.1] - 2026-11-16 (当前最新)
+
+### 🎨 专项练习入口重构与做题动线优化
+- **入口层级分离（[index.html](file:///Users/arthurliang/Documents/vibe%20coding/kids%20%E5%9B%B4%E6%A3%8B/index.html)、[css/style.css](file:///Users/arthurliang/Documents/vibe%20coding/kids%20%E5%9B%B4%E6%A3%8B/css/style.css)）**：
+  - 将【📅 每日三题】与【📌 错题本】从原本混杂在主线阶段栏中的位置抽离，移至顶部标题区旁独立的快捷胶囊组（`.quick-practice-pills`），主线五大阶段栏恢复清爽对齐。
+- **动态状态反馈与顺滑连刷交互（[js/app.js](file:///Users/arthurliang/Documents/vibe%20coding/kids%20%E5%9B%B4%E6%A3%8B/js/app.js)）**：
+  - 【📅 每日三题】实时显示打卡进度 `(0/3)` → 全部通关转为绿色完成态。
+  - 专项模式内通关后智能衔接“继续下一道每日题 / 攻克下一道错题”，全部完成后引导一键返回主线。
+  - 错题数为 0 时点击【📌 错题本 (0)】不再破坏当前关卡列表，保持当前做题上下文。
+- **离线缓存与安装包同步**：[sw.js](file:///Users/arthurliang/Documents/vibe%20coding/kids%20%E5%9B%B4%E6%A3%8B/sw.js) 升级至 `kids-go-v16-combo-review-ux`，同步更新单文件离线版（15.67 MB）与 iPad 描述文件（10.82 MB）。
+
+---
+
+## [v1.6.0] - 2026-11-16
 
 ### ⚡ 教学深度闭环与单文件极限瘦身（50关·50枚勋章·局后复盘）
 - **新增第 5 阶段【⚡ 连环实战 (41~50关)】(`multi_step` 多手连续应对引擎)**：
