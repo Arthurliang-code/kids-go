@@ -57,7 +57,7 @@ node -c js/go-engine.js && node -c js/puzzles.js && node -c js/ai.js && node -c 
 python3 build_standalone.py
 ```
 **标准**：
-- 成功输出 `萌宝少儿围棋_iPad离线单文件版.html`（含全部 1,016 条 Base64 内嵌语音，大小约 35~40MB）。
+- 成功输出 `萌宝少儿围棋_iPad离线单文件版.html`（默认内嵌双核心 16k 轻量化 Base64 语音，大小约 14~18MB；`--all-voices` 全量模式约 28~35MB）。
 - 成功输出 `KidsGo_iPad_Offline.mobileconfig`。
 - 构建脚本执行退出码为 0，无正则转义或文件读写报错。
 

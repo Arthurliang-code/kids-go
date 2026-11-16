@@ -735,20 +735,24 @@ input:checked + .slider:before {
 /* 教学阶段切换器（启蒙初级 vs 进阶中级） */
 .stage-switcher {
   display: flex;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-bottom: 8px;
   background: #f1f2f6;
-  padding: 4px;
+  padding: 5px;
   border-radius: 14px;
+  max-width: 100%;
   width: fit-content;
 }
 
 .stage-pill {
   border: none;
   background: transparent;
-  padding: 6px 14px;
+  padding: 8px 14px;
+  min-height: 40px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   color: #747d8c;
   cursor: pointer;
@@ -768,6 +772,19 @@ input:checked + .slider:before {
 
 #btnStageIntermediate.stage-pill.active {
   color: #e67e22;
+}
+
+#btnStageCombo.stage-pill.active {
+  color: #8e44ad;
+}
+
+.stage-pill-special {
+  color: #1e90ff;
+}
+
+.stage-pill-special.active {
+  color: #0984e3;
+  background: #eaf4ff;
 }
 
 .level-chips-scroll {

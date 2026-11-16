@@ -3,6 +3,7 @@
 
 import os
 import re
+import sys
 import json
 import base64
 import subprocess
@@ -11,15 +12,23 @@ import uuid
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 VOICE_PACKS = ['xiaoxiao', 'xiaoyi', 'yunxia', 'yunxi']
+DEFAULT_STANDALONE_PACKS = ['xiaoxiao', 'yunxi']
 
-def compress_mp3_to_base64(mp3_path, bitrate='24k'):
-    """使用 ffmpeg 将语音压缩为高清晰度 24kHz 单声道 MP3 并转为 Base64 Data URI"""
+VOICE_LABELS = {
+    'xiaoxiao': '🌟 晓晓老师 (温暖故事音)',
+    'xiaoyi':   '👧 晓伊姐姐 (甜美萌音)',
+    'yunxia':   '👦 云夏弟弟 (活泼童声)',
+    'yunxi':    '🐼 云希哥哥 (阳光导师)'
+}
+
+def compress_mp3_to_base64(mp3_path, bitrate='16k', sample_rate='22050'):
+    """使用 ffmpeg 将语音压缩为高清晰度 22.05kHz 单声道 MP3 并转为 Base64 Data URI"""
     try:
         out_bytes = subprocess.check_output([
             '/opt/homebrew/bin/ffmpeg',
             '-y', '-i', mp3_path,
             '-ac', '1',
-            '-ar', '24000',
+            '-ar', str(sample_rate),
             '-b:a', bitrate,
             '-f', 'mp3',
             'pipe:1'
@@ -67,13 +76,15 @@ def build_html_bundle(packs_to_include, bitrate='24k'):
         f'<link rel="apple-touch-icon" href="{icon_data_uri}">\n  <style>\n{style_css}\n  </style>'
     )
 
-    # 如果只内嵌了晓晓音色（如轻量桌面描述文件版），保持下拉框同步提示
-    if len(packs_to_include) == 1:
+    # 同步下拉框仅展示当前离线包实际内嵌的音色，防止切换后缺失
+    if len(packs_to_include) < len(VOICE_PACKS):
+        options_html = "\n".join(
+            f'              <option value="{p}"{" selected" if idx == 0 else ""}>{VOICE_LABELS.get(p, p)}</option>'
+            for idx, p in enumerate(packs_to_include)
+        )
         html = re.sub(
             r'<select id="selectVoicePack"[^>]*>.*?</select>',
-            '''<select id="selectVoicePack" class="voice-pack-select" title="切换配音老师">
-              <option value="xiaoxiao" selected>🌟 晓晓老师 (温暖故事音)</option>
-            </select>''',
+            f'''<select id="selectVoicePack" class="voice-pack-select" title="切换配音老师">\n{options_html}\n            </select>''',
             html,
             flags=re.DOTALL
         )
@@ -168,8 +179,11 @@ def build_mobileconfig(standalone_html_str, icon_b64):
 """
 
 def main():
-    print("📦 正在打包【萌宝少儿围棋_iPad离线单文件版.html】（含全部 4 套微软 Neural 语音包）...")
-    full_html = build_html_bundle(VOICE_PACKS, bitrate='24k')
+    use_all_voices = '--all-voices' in sys.argv
+    standalone_packs = VOICE_PACKS if use_all_voices else DEFAULT_STANDALONE_PACKS
+    pack_desc = "全部 4 套" if use_all_voices else "双核心音色（晓晓老师 + 云希哥哥）"
+    print(f"📦 正在打包【萌宝少儿围棋_iPad离线单文件版.html】（内嵌{pack_desc} · 16k 轻量化语音包）...")
+    full_html = build_html_bundle(standalone_packs, bitrate='16k')
     out_html_path = os.path.join(PROJECT_DIR, '萌宝少儿围棋_iPad离线单文件版.html')
     with open(out_html_path, 'w', encoding='utf-8') as f:
         f.write(full_html)
@@ -177,7 +191,7 @@ def main():
     print(f"✅ 单文件离线 HTML 生成完毕: {out_html_path} ({size_mb:.2f} MB)")
 
     print("📲 正在打包【KidsGo_iPad_Offline.mobileconfig】（iPad 桌面全屏纯离线 App 描述文件）...")
-    lite_html = build_html_bundle(['xiaoxiao'], bitrate='20k')
+    lite_html = build_html_bundle(['xiaoxiao'], bitrate='16k')
     icon_b64 = read_b64('assets/icons/icon-192.png')
     mobileconfig_xml = build_mobileconfig(lite_html, icon_b64)
     out_cfg_path = os.path.join(PROJECT_DIR, 'KidsGo_iPad_Offline.mobileconfig')

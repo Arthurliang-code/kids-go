@@ -1379,6 +1379,75 @@ class GoAI {
 
     return best;
   }
+
+  // ============================================================================
+  // 六、 局后“一分钟萌宠复盘”纯本地分析器
+  // ============================================================================
+  analyzeMatchReview(moveLog, isCaptureMode = true) {
+    if (!Array.isArray(moveLog) || moveLog.length === 0) {
+      return { bestMove: null, worstMove: null };
+    }
+
+    let bestMove = null;
+    let bestScore = -Infinity;
+    let worstMove = null;
+    let maxLoss = 35; // 至少亏损 35 分以上才标为“可惜失误”
+
+    const simEngine = new GoEngine(moveLog[0].boardBefore.length);
+    const afterEngine = new GoEngine(moveLog[0].boardBefore.length);
+
+    for (let i = 0; i < moveLog.length; i++) {
+      const item = moveLog[i];
+      if (item.color !== BLACK || item.isPass) continue;
+
+      simEngine.loadBoard(item.boardBefore, BLACK);
+      const candidates = this.evaluateAllCandidates(simEngine, BLACK, RANKS[4], isCaptureMode, false);
+      if (!candidates || candidates.length === 0) continue;
+
+      const top = candidates[0];
+      const actual = candidates.find(c => c.x === item.x && c.y === item.y);
+      if (!actual) continue;
+
+      afterEngine.loadBoard(item.boardBefore, BLACK);
+      const playRes = afterEngine.play(item.x, item.y, BLACK);
+      const tesuji = playRes.success
+        ? this.analyzePlayerMove(simEngine, afterEngine, item.x, item.y, BLACK, playRes.captures)
+        : null;
+
+      const highlightBonus = tesuji ? 120 : 0;
+      const effectiveBestScore = actual.score + highlightBonus + (item.captures || 0) * 30;
+      if (effectiveBestScore > bestScore) {
+        bestScore = effectiveBestScore;
+        bestMove = {
+          logIndex: i,
+          moveNum: item.moveNum,
+          x: item.x,
+          y: item.y,
+          tacticName: tesuji ? tesuji.name : (actual.captures > 0 ? `果断提吃 ${actual.captures} 子` : '稳健好棋'),
+          comment: tesuji
+            ? `第 ${item.moveNum} 手打出漂亮手筋【${tesuji.name}】，太有大将风范啦！`
+            : `第 ${item.moveNum} 手落子非常精准，是整盘棋最亮眼的一步妙手！`
+        };
+      }
+
+      const loss = top.score - actual.score;
+      if (loss > maxLoss && (top.x !== item.x || top.y !== item.y)) {
+        maxLoss = loss;
+        worstMove = {
+          logIndex: i,
+          moveNum: item.moveNum,
+          x: item.x,
+          y: item.y,
+          betterX: top.x,
+          betterY: top.y,
+          loss: Math.round(loss),
+          comment: `第 ${item.moveNum} 手可以下在金色光圈 (${top.x + 1}列·${top.y + 1}行) 哦，那里收益更高！`
+        };
+      }
+    }
+
+    return { bestMove, worstMove };
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

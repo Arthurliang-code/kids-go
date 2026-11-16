@@ -47,6 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnStageIntermediate = document.getElementById('btnStageIntermediate');
   const btnStageAdvanced = document.getElementById('btnStageAdvanced');
   const btnStageMaster = document.getElementById('btnStageMaster');
+  const btnStageCombo = document.getElementById('btnStageCombo');
+  const btnStageDaily = document.getElementById('btnStageDaily');
+  const btnStageWrong = document.getElementById('btnStageWrong');
+  const wrongCountBadge = document.getElementById('wrongCountBadge');
+  const reviewControls = document.getElementById('reviewControls');
+  const btnReviewPrev = document.getElementById('btnReviewPrev');
+  const btnReviewNext = document.getElementById('btnReviewNext');
+  const btnReviewBest = document.getElementById('btnReviewBest');
+  const btnReviewMistake = document.getElementById('btnReviewMistake');
+  const btnExitReview = document.getElementById('btnExitReview');
+  const btnModalSecondary = document.getElementById('btnModalSecondary');
   const petCard = document.getElementById('petCard');
   const academyStepPills = document.getElementById('academyStepPills');
   const btnTabPractice = document.getElementById('btnTabPractice');
@@ -115,8 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // 运行时状态
   let currentMode = 'academy'; // 'academy' | 'match'
   let academySubMode = 'teach'; // 'teach' (课前教学演示) | 'practice' (动手闯关练习)
-  let currentStage = 'beginner'; // 'beginner' (1~10关) | 'intermediate' (11~20关)
+  let currentStage = 'beginner'; // 'beginner' | 'intermediate' | 'advanced' | 'master' | 'combo' | 'daily' | 'wrong'
   let currentTeachStepIndex = 0;
+  let currentMultiStepIndex = 0;
   let currentPuzzleIndex = 0;
   let puzzleIdentifiedPoints = new Set(); // 答题模式下已点击的点
   let showPuzzleAnswer = false; // 是否在棋盘与讲台显示本题标准答案
@@ -134,6 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let isCaptureGameMode = true; // 初学吃子模式 vs 常规数地模式
   let targetCaptures = 5;       // 默认吃满5子获胜（充裕中盘手筋与死活交锋空间）
   let usedTesujiInMatch = new Set(); // 对弈模式下手筋触发去重集合（降噪体验）
+  let matchMoveLog = [];        // 对弈每步快照，用于局后“一分钟萌宠复盘”
+  let isReviewMode = false;
+  let reviewData = null;        // { bestMove, worstMove }
+  let reviewCursor = 0;         // 当前复盘到第几步 (0 = 开局前，N = 第N手后)
+  let reviewHighlight = null;   // { type: 'best'|'mistake', x, y, betterX?, betterY? }
 
   // 更新地盘势力雷达缓存
   function updateCachedInfluence() {
@@ -171,7 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
     passedPuzzles: [],
     unlockedBadges: [],
     stars: 0,
-    gamesWon: 0
+    gamesWon: 0,
+    wrongCounts: {},
+    dailyChallenge: { date: '', ids: [], doneIds: [] }
   };
 
   try {
@@ -179,6 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saved) {
       const parsed = JSON.parse(saved);
       userProgress = Object.assign(userProgress, parsed);
+      if (!userProgress.wrongCounts || typeof userProgress.wrongCounts !== 'object') {
+        userProgress.wrongCounts = {};
+      }
+      if (!userProgress.dailyChallenge || typeof userProgress.dailyChallenge !== 'object') {
+        userProgress.dailyChallenge = { date: '', ids: [], doneIds: [] };
+      }
       // 修正旧版本初始把未通关的第1关或下一关塞进 passedPuzzles 的历史遗留数据
       if (
         Array.isArray(userProgress.passedPuzzles) &&
@@ -196,6 +221,48 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       localStorage.setItem('kids_go_progress', JSON.stringify(userProgress));
     } catch (e) {}
+  }
+
+  function updateWrongCountBadge() {
+    const wrongTotal = Object.values(userProgress.wrongCounts || {}).filter(c => c > 0).length;
+    if (wrongCountBadge) wrongCountBadge.textContent = String(wrongTotal);
+  }
+
+  function recordPuzzleMistake(puzzleId) {
+    if (!userProgress.wrongCounts) userProgress.wrongCounts = {};
+    userProgress.wrongCounts[puzzleId] = (userProgress.wrongCounts[puzzleId] || 0) + 1;
+    saveProgress();
+    updateWrongCountBadge();
+  }
+
+  function clearPuzzleMistake(puzzleId) {
+    if (userProgress.wrongCounts && userProgress.wrongCounts[puzzleId]) {
+      delete userProgress.wrongCounts[puzzleId];
+      saveProgress();
+      updateWrongCountBadge();
+    }
+  }
+
+  function getTodayDateKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function getDailyChallengeIds() {
+    const today = getTodayDateKey();
+    if (userProgress.dailyChallenge && userProgress.dailyChallenge.date === today && Array.isArray(userProgress.dailyChallenge.ids) && userProgress.dailyChallenge.ids.length === 3) {
+      return userProgress.dailyChallenge.ids;
+    }
+    // 确定性按日期抽取：1道基础/吃子(1~20) + 1道大局(31~40) + 1道连环/死活(21~30或41~50)
+    const d = new Date();
+    const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    const id1 = 1 + (seed % 20);
+    const id2 = 31 + ((seed * 3) % 10);
+    const pool3 = PUZZLE_LEVELS.length >= 50 ? 41 + ((seed * 7) % 10) : 21 + ((seed * 7) % 10);
+    const ids = [id1, id2, pool3];
+    userProgress.dailyChallenge = { date: today, ids, doneIds: [] };
+    saveProgress();
+    return ids;
   }
 
   // ====== 1. 高分辨率与响应式画布尺寸自适应（全面适配小尺寸 iPad Pro 横竖屏与分屏） ======
@@ -462,6 +529,45 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('💡', pt.px, pt.py);
+      ctx.restore();
+    }
+
+    // 局后复盘高亮标记（妙手翠绿星光 / 失误红圈 + 金色推荐点）
+    if (isReviewMode && reviewHighlight) {
+      ctx.save();
+      if (reviewHighlight.type === 'best') {
+        const pt = gridToPixel(reviewHighlight.x, reviewHighlight.y);
+        ctx.beginPath();
+        ctx.arc(pt.px, pt.py, stoneRadius * 1.1, 0, Math.PI * 2);
+        ctx.strokeStyle = '#2ed573';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.font = `bold ${Math.max(13, Math.floor(cellSize * 0.38))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🌟', pt.px + stoneRadius * 0.7, pt.py - stoneRadius * 0.7);
+      } else if (reviewHighlight.type === 'mistake') {
+        const ptBad = gridToPixel(reviewHighlight.x, reviewHighlight.y);
+        ctx.beginPath();
+        ctx.arc(ptBad.px, ptBad.py, stoneRadius * 1.05, 0, Math.PI * 2);
+        ctx.strokeStyle = '#ff4757';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        if (typeof reviewHighlight.betterX === 'number') {
+          const ptGood = gridToPixel(reviewHighlight.betterX, reviewHighlight.betterY);
+          ctx.beginPath();
+          ctx.arc(ptGood.px, ptGood.py, stoneRadius * 0.92, 0, Math.PI * 2);
+          ctx.strokeStyle = '#ffa502';
+          ctx.lineWidth = 4;
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255, 165, 2, 0.3)';
+          ctx.fill();
+          ctx.font = `bold ${Math.max(13, Math.floor(cellSize * 0.36))}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('💡', ptGood.px, ptGood.py);
+        }
+      }
       ctx.restore();
     }
   }
@@ -871,6 +977,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ====== 5. 业务落子与闯关判定 ======
   function executePlayerAction(gx, gy) {
+    if (isReviewMode) return;
     clearHint();
     if (currentMode === 'academy') {
       handlePuzzleMove(gx, gy);
@@ -963,6 +1070,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!clickedChoice.isBest) {
         SoundEffects.playGentleError();
+        recordPuzzleMistake(puzzle.id);
         const bestChoice = puzzle.choices.find(c => c.isBest);
         petSpeech.textContent = `哎呀！选择 ${clickedChoice.label}【${clickedChoice.name}】只得 ${clickedChoice.value} 目小利；而选择 ${bestChoice.label}【${bestChoice.name}】足足能圈出 ${bestChoice.value} 目大庄园！快试试点 ${bestChoice.label} 吧！`;
         if (VoiceNarrator.isEnabled()) {
@@ -1100,6 +1208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         SoundEffects.playGentleError();
+        recordPuzzleMistake(puzzle.id);
         const coordKey = `${gx},${gy}`;
         const customHint = puzzle.wrongMoveHints && puzzle.wrongMoveHints[coordKey];
         if (customHint) {
@@ -1116,6 +1225,85 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           } else {
             petSpeech.textContent = "这一步没有达到最佳效果呢，可以点【📖 看原理图解】复习一下技巧哦！";
+            if (VoiceNarrator.isEnabled()) {
+              VoiceNarrator.speakWrong(puzzle.id, petSpeech.textContent);
+            }
+          }
+        }
+      }
+      return;
+    }
+
+    // 类型 C: 多手连环互动题（第41~50关，走对一手后电脑真实应一手，继续应对直至过关）
+    if (puzzle.type === 'multi_step' && Array.isArray(puzzle.steps)) {
+      if (engine.board[gy][gx] !== EMPTY) {
+        SoundEffects.playGentleError();
+        petSpeech.textContent = "这里已经有棋子啦，请下在空的交叉点上哦！";
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speakError('occupied', petSpeech.textContent);
+        }
+        return;
+      }
+
+      const stepCfg = puzzle.steps[currentMultiStepIndex];
+      if (!stepCfg) return;
+
+      const isStepValid = stepCfg.validMoves.some(m => m.x === gx && m.y === gy);
+      if (isStepValid) {
+        const res = engine.play(gx, gy, puzzle.playerColor);
+        if (!res.success) {
+          SoundEffects.playGentleError();
+          petSpeech.textContent = `这里不能下哦：${res.reason}`;
+          if (VoiceNarrator.isEnabled()) {
+            VoiceNarrator.speakError('suicide', petSpeech.textContent);
+          }
+          return;
+        }
+        if (res.captures.length > 0) SoundEffects.playCapture();
+        else SoundEffects.playStone();
+        drawBoard();
+
+        currentMultiStepIndex++;
+        if (stepCfg.aiReply && currentMultiStepIndex < puzzle.steps.length) {
+          isAnimatingFollowUp = true;
+          petSpeech.textContent = stepCfg.stepTip || "走对啦！看看白棋怎么应对...";
+          const replyTimer = setTimeout(() => {
+            const replyRes = engine.play(stepCfg.aiReply.x, stepCfg.aiReply.y, stepCfg.aiReply.color || WHITE);
+            if (replyRes.success) {
+              if (replyRes.captures.length > 0) SoundEffects.playCapture();
+              else SoundEffects.playStone();
+              drawBoard();
+            }
+            isAnimatingFollowUp = false;
+            if (VoiceNarrator.isEnabled()) {
+              VoiceNarrator.speakStepContinue(petSpeech.textContent);
+            }
+          }, 380);
+          followUpTimers.push(replyTimer);
+        } else if (currentMultiStepIndex >= puzzle.steps.length) {
+          onPuzzleComplete(puzzle);
+        }
+      } else {
+        SoundEffects.playGentleError();
+        recordPuzzleMistake(puzzle.id);
+        const coordKey = `${gx},${gy}`;
+        const customHint = puzzle.wrongMoveHints && puzzle.wrongMoveHints[coordKey];
+        if (customHint) {
+          petSpeech.textContent = customHint;
+          if (VoiceNarrator.isEnabled()) {
+            VoiceNarrator.speakWrong(puzzle.id, customHint);
+          }
+        } else {
+          const test = engine.testMove(gx, gy, puzzle.playerColor);
+          if (!test.valid) {
+            petSpeech.textContent = `这里不能下哦：${test.reason}`;
+            if (VoiceNarrator.isEnabled()) {
+              VoiceNarrator.speakError('suicide', petSpeech.textContent);
+            }
+          } else {
+            petSpeech.textContent = currentMultiStepIndex === 0
+              ? "这一步没有达到连环攻击的效果呢，先看看【📖 看原理图解】吧！"
+              : "前面走对啦，这一步还差一点点，再仔细看看白棋刚刚的应手哦！";
             if (VoiceNarrator.isEnabled()) {
               VoiceNarrator.speakWrong(puzzle.id, petSpeech.textContent);
             }
@@ -1158,6 +1346,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const isFirstUnlock = !userProgress.unlockedBadges.includes(puzzle.badge);
     if (!userProgress.passedPuzzles.includes(puzzle.id)) {
       userProgress.passedPuzzles.push(puzzle.id);
+    }
+    clearPuzzleMistake(puzzle.id);
+    const todayIds = getDailyChallengeIds();
+    if (todayIds.includes(puzzle.id) && userProgress.dailyChallenge && !userProgress.dailyChallenge.doneIds.includes(puzzle.id)) {
+      userProgress.dailyChallenge.doneIds.push(puzzle.id);
     }
     const nextId = puzzle.id + 1;
     if (isFirstUnlock) {
@@ -1249,6 +1442,16 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     updateCachedInfluence();
+    matchMoveLog.push({
+      moveNum: matchMoveLog.length + 1,
+      color: playColor,
+      x: gx,
+      y: gy,
+      captures: res.captures.length,
+      boardBefore: prevEngine.board.map(r => [...r]),
+      boardAfter: engine.board.map(r => [...r]),
+      capturedAfter: { ...engine.capturedStones }
+    });
 
     lastMoveWasPlayerTesuji = false;
     const playerTesuji = ai.analyzePlayerMove(prevEngine, engine, gx, gy, playColor, res.captures);
@@ -1305,11 +1508,20 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const aiColor = WHITE;
+    const prevBoard = engine.board.map(r => [...r]);
     const best = ai.getBestMove(engine, aiColor, isCaptureGameMode);
 
     if (!best) {
       // AI Pass
       engine.pass();
+      matchMoveLog.push({
+        moveNum: matchMoveLog.length + 1,
+        color: aiColor,
+        isPass: true,
+        boardBefore: prevBoard,
+        boardAfter: engine.board.map(r => [...r]),
+        capturedAfter: { ...engine.capturedStones }
+      });
       petSpeech.textContent = "小萌宠没有好下的地方，选择虚手（Pass）啦！";
       isAITurn = false;
       drawBoard();
@@ -1320,6 +1532,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const res = engine.play(best.x, best.y, aiColor);
     if (res.success) {
       updateCachedInfluence();
+      matchMoveLog.push({
+        moveNum: matchMoveLog.length + 1,
+        color: aiColor,
+        x: best.x,
+        y: best.y,
+        captures: res.captures.length,
+        boardBefore: prevBoard,
+        boardAfter: engine.board.map(r => [...r]),
+        capturedAfter: { ...engine.capturedStones }
+      });
       if (res.captures.length > 0) {
         SoundEffects.playCapture();
         if (best.coachInfo && best.coachInfo.levelId >= 7) {
@@ -1428,7 +1650,9 @@ document.addEventListener('DOMContentLoaded', () => {
           actionText: "挑战新对手",
           onAction: () => {
             initMatchView();
-          }
+          },
+          secondaryText: matchMoveLog.length >= 2 ? "🔍 熊猫带我复盘" : null,
+          onSecondary: () => startMatchReview()
         });
       } else {
         SoundEffects.playSuccess();
@@ -1441,7 +1665,9 @@ document.addEventListener('DOMContentLoaded', () => {
           actionText: "再来一局",
           onAction: () => {
             resetMatch();
-          }
+          },
+          secondaryText: matchMoveLog.length >= 2 ? "🔍 熊猫带我复盘" : null,
+          onSecondary: () => startMatchReview()
         });
       }
     } else {
@@ -1459,7 +1685,9 @@ document.addEventListener('DOMContentLoaded', () => {
         actionText: "重新挑战",
         onAction: () => {
           resetMatch();
-        }
+        },
+        secondaryText: matchMoveLog.length >= 2 ? "🔍 熊猫带我复盘" : null,
+        onSecondary: () => startMatchReview()
       });
     }
 
@@ -1508,7 +1736,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function showVictoryModal({ title, desc, actionText, onAction }) {
+  function showVictoryModal({ title, desc, actionText, onAction, secondaryText = null, onSecondary = null }) {
     modalTitle.textContent = title;
     modalDesc.innerText = desc;
     btnModalAction.textContent = actionText;
@@ -1516,6 +1744,18 @@ document.addEventListener('DOMContentLoaded', () => {
       victoryModal.classList.remove('show');
       if (onAction) onAction();
     };
+    if (btnModalSecondary) {
+      if (secondaryText && onSecondary) {
+        btnModalSecondary.textContent = secondaryText;
+        btnModalSecondary.style.display = 'block';
+        btnModalSecondary.onclick = () => {
+          victoryModal.classList.remove('show');
+          onSecondary();
+        };
+      } else {
+        btnModalSecondary.style.display = 'none';
+      }
+    }
     victoryModal.classList.add('show');
   }
 
@@ -1688,6 +1928,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 420);
         followUpTimers.push(t);
       }
+    } else if (puzzle.type === 'multi_step' && Array.isArray(puzzle.steps)) {
+      const s0 = puzzle.steps[0] && puzzle.steps[0].validMoves && puzzle.steps[0].validMoves[0];
+      const s1 = puzzle.steps[1] && puzzle.steps[1].validMoves && puzzle.steps[1].validMoves[0];
+      if (s0) {
+        const t1 = setTimeout(() => {
+          if (currentMode !== 'academy') return;
+          handlePuzzleMove(s0.x, s0.y);
+        }, 420);
+        followUpTimers.push(t1);
+      }
+      if (s1) {
+        const t2 = setTimeout(() => {
+          if (currentMode !== 'academy') return;
+          handlePuzzleMove(s1.x, s1.y);
+        }, 1250);
+        followUpTimers.push(t2);
+      }
     }
   }
 
@@ -1740,6 +1997,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hidePuzzleAnswer();
     const puzzle = PUZZLE_LEVELS[currentPuzzleIndex];
     academySubMode = 'practice';
+    currentMultiStepIndex = 0;
     puzzleIdentifiedPoints.clear();
 
     // 动手练习模式下隐藏“开始做题”按钮
@@ -1764,34 +2022,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 阶段切换：'beginner' (1~10关), 'intermediate' (11~20关), 'advanced' (21~30关) 或 'master' (31~40关)
+  // 阶段切换：'beginner' (1~10), 'intermediate' (11~20), 'advanced' (21~30), 'master' (31~40), 'combo' (41~50), 'daily' (每日三题), 'wrong' (错题巩固)
   function switchStage(stage, targetIndex = null) {
     currentStage = stage;
     if (btnStageBeginner) btnStageBeginner.classList.toggle('active', currentStage === 'beginner');
     if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
     if (btnStageAdvanced) btnStageAdvanced.classList.toggle('active', currentStage === 'advanced');
     if (btnStageMaster) btnStageMaster.classList.toggle('active', currentStage === 'master');
+    if (btnStageCombo) btnStageCombo.classList.toggle('active', currentStage === 'combo');
+    if (btnStageDaily) btnStageDaily.classList.toggle('active', currentStage === 'daily');
+    if (btnStageWrong) btnStageWrong.classList.toggle('active', currentStage === 'wrong');
 
     if (targetIndex !== null) {
       loadPuzzle(targetIndex, true);
-    } else {
-      let minIdx = 0;
-      let maxIdx = 9;
-      if (currentStage === 'intermediate') {
-        minIdx = 10;
-        maxIdx = 19;
-      } else if (currentStage === 'advanced') {
-        minIdx = 20;
-        maxIdx = 29;
-      } else if (currentStage === 'master') {
-        minIdx = 30;
-        maxIdx = 39;
-      }
-      if (currentPuzzleIndex < minIdx || currentPuzzleIndex > maxIdx) {
-        loadPuzzle(minIdx, true);
+      return;
+    }
+
+    if (currentStage === 'daily') {
+      const dailyIds = getDailyChallengeIds();
+      const firstId = dailyIds[0] || 1;
+      loadPuzzle(firstId - 1, true);
+      return;
+    }
+
+    if (currentStage === 'wrong') {
+      const wrongIds = Object.entries(userProgress.wrongCounts || {})
+        .filter(([, cnt]) => cnt > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([id]) => Number(id));
+      if (wrongIds.length > 0) {
+        loadPuzzle(wrongIds[0] - 1, true);
       } else {
         renderLevelChips();
+        petSpeech.textContent = "太棒啦！目前错题本空空的，说明你每一关都掌握得很扎实哦！";
       }
+      return;
+    }
+
+    let minIdx = 0;
+    let maxIdx = 9;
+    if (currentStage === 'intermediate') {
+      minIdx = 10;
+      maxIdx = 19;
+    } else if (currentStage === 'advanced') {
+      minIdx = 20;
+      maxIdx = 29;
+    } else if (currentStage === 'master') {
+      minIdx = 30;
+      maxIdx = 39;
+    } else if (currentStage === 'combo') {
+      minIdx = 40;
+      maxIdx = Math.min(49, PUZZLE_LEVELS.length - 1);
+    }
+    if (currentPuzzleIndex < minIdx || currentPuzzleIndex > maxIdx) {
+      loadPuzzle(minIdx, true);
+    } else {
+      renderLevelChips();
     }
   }
 
@@ -1802,16 +2088,21 @@ document.addEventListener('DOMContentLoaded', () => {
     clearFollowUpTimers();
     if (scoreBox) scoreBox.style.display = 'none';
     currentPuzzleIndex = index;
+    currentMultiStepIndex = 0;
 
-    // 自动同步所属四阶段（初级 vs 中级 vs 高级 vs 大局）
-    if (index >= 30 && currentStage !== 'master') {
-      currentStage = 'master';
-    } else if (index >= 20 && index < 30 && currentStage !== 'advanced') {
-      currentStage = 'advanced';
-    } else if (index >= 10 && index < 20 && currentStage !== 'intermediate') {
-      currentStage = 'intermediate';
-    } else if (index < 10 && currentStage !== 'beginner') {
-      currentStage = 'beginner';
+    // 若非每日/错题筛选模式，自动同步所属五阶段
+    if (currentStage !== 'daily' && currentStage !== 'wrong') {
+      if (index >= 40 && currentStage !== 'combo') {
+        currentStage = 'combo';
+      } else if (index >= 30 && index < 40 && currentStage !== 'master') {
+        currentStage = 'master';
+      } else if (index >= 20 && index < 30 && currentStage !== 'advanced') {
+        currentStage = 'advanced';
+      } else if (index >= 10 && index < 20 && currentStage !== 'intermediate') {
+        currentStage = 'intermediate';
+      } else if (index < 10 && currentStage !== 'beginner') {
+        currentStage = 'beginner';
+      }
     }
 
     const puzzle = PUZZLE_LEVELS[index];
@@ -1823,7 +2114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 渲染关卡选项卡（根据当前阶段展示 1~10、11~20、21~30 或 31~40 关，保持界面清爽大字号，方便触控）
+  // 渲染关卡选项卡（支持5大阶段、每日三题与错题巩固）
   function renderLevelChips() {
     if (!levelChipsContainer) return;
     levelChipsContainer.innerHTML = '';
@@ -1833,23 +2124,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnStageIntermediate) btnStageIntermediate.classList.toggle('active', currentStage === 'intermediate');
     if (btnStageAdvanced) btnStageAdvanced.classList.toggle('active', currentStage === 'advanced');
     if (btnStageMaster) btnStageMaster.classList.toggle('active', currentStage === 'master');
+    if (btnStageCombo) btnStageCombo.classList.toggle('active', currentStage === 'combo');
+    if (btnStageDaily) btnStageDaily.classList.toggle('active', currentStage === 'daily');
+    if (btnStageWrong) btnStageWrong.classList.toggle('active', currentStage === 'wrong');
+    updateWrongCountBadge();
 
-    let startIdx = 0;
-    let endIdx = 10;
-    if (currentStage === 'intermediate') {
-      startIdx = 10;
-      endIdx = 20;
-    } else if (currentStage === 'advanced') {
-      startIdx = 20;
-      endIdx = 30;
-    } else if (currentStage === 'master') {
-      startIdx = 30;
-      endIdx = 40;
+    let stagePuzzles = [];
+    if (currentStage === 'daily') {
+      const dailyIds = getDailyChallengeIds();
+      stagePuzzles = dailyIds.map(id => PUZZLE_LEVELS.find(p => p.id === id)).filter(Boolean);
+    } else if (currentStage === 'wrong') {
+      const wrongIds = Object.entries(userProgress.wrongCounts || {})
+        .filter(([, cnt]) => cnt > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([id]) => Number(id));
+      stagePuzzles = wrongIds.map(id => PUZZLE_LEVELS.find(p => p.id === id)).filter(Boolean);
+      if (stagePuzzles.length === 0) {
+        const emptyHint = document.createElement('span');
+        emptyHint.style.cssText = 'color:#2ed573;font-weight:800;font-size:15px;padding:8px 12px;';
+        emptyHint.textContent = '🌟 太棒了，目前没有错题需要巩固！';
+        levelChipsContainer.appendChild(emptyHint);
+        return;
+      }
+    } else {
+      let startIdx = 0;
+      let endIdx = 10;
+      if (currentStage === 'intermediate') {
+        startIdx = 10;
+        endIdx = 20;
+      } else if (currentStage === 'advanced') {
+        startIdx = 20;
+        endIdx = 30;
+      } else if (currentStage === 'master') {
+        startIdx = 30;
+        endIdx = 40;
+      } else if (currentStage === 'combo') {
+        startIdx = 40;
+        endIdx = PUZZLE_LEVELS.length;
+      }
+      stagePuzzles = PUZZLE_LEVELS.slice(startIdx, endIdx);
     }
-    const stagePuzzles = PUZZLE_LEVELS.slice(startIdx, endIdx);
 
-    stagePuzzles.forEach((p, offset) => {
-      const idx = startIdx + offset;
+    stagePuzzles.forEach((p) => {
+      const idx = p.id - 1;
       const chip = document.createElement('div');
       const isPassed = userProgress.passedPuzzles.includes(p.id);
       const isActive = idx === currentPuzzleIndex;
@@ -1910,10 +2227,20 @@ document.addEventListener('DOMContentLoaded', () => {
     { name: "步步为营", icon: "🏰", desc: "立足边线完美拆二" },
     { name: "斩龙神将", icon: "⚔️", desc: "宏观分断敌方大龙" },
     { name: "轻灵如燕", icon: "🕊️", desc: "妙手侵消压制大模样" },
-    { name: "秋收大庄主", icon: "🌾", desc: "终局点目收获金色庄园" }
+    { name: "秋收大庄主", icon: "🌾", desc: "终局点目收获金色庄园" },
+    { name: "连环猎手", icon: "⚡", desc: "掌握双打之后果断提吃" },
+    { name: "追风神将", icon: "🌪️", desc: "完成连续扭羊头征子" },
+    { name: "反杀奇兵", icon: "🪃", desc: "完成先扑后吃连环倒扑" },
+    { name: "金剪断龙", icon: "✂️", desc: "掌握先挤后断滚打包收" },
+    { name: "破城先锋", icon: "🗡️", desc: "掌握先缩后点杀棋次序" },
+    { name: "铜墙铁壁", icon: "🧱", desc: "掌握一路先手扳粘官子" },
+    { name: "铁血金鸡", icon: "🐓", desc: "掌握金鸡独立连环杀" },
+    { name: "神机网捕", icon: "🕸️", desc: "掌握声东击西先打后拦" },
+    { name: "连环破阵", icon: "💥", desc: "掌握曲四大眼连续破眼" },
+    { name: "连环棋圣", icon: "🏆", desc: "通关全部50关终极加冕" }
   ];
 
-  // 渲染荣誉徽章馆（40关专属勋章 + 顶部荣誉进度条）
+  // 渲染荣誉徽章馆（50关专属勋章 + 顶部荣誉进度条）
   function renderBadges() {
     const badgeGrid = document.getElementById('badgeGrid');
     if (!badgeGrid) return;
@@ -1941,11 +2268,88 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 局后“一分钟萌宠复盘”核心控制器
+  function renderReviewStep(stepIdx) {
+    if (!isReviewMode || matchMoveLog.length === 0) return;
+    reviewCursor = Math.max(0, Math.min(stepIdx, matchMoveLog.length));
+    reviewHighlight = null;
+
+    if (reviewCursor === 0) {
+      engine.reset(matchMoveLog[0].boardBefore.length);
+      petSpeech.textContent = `🔍 复盘第 0 手（开局前）—— 共 ${matchMoveLog.length} 手，点击【⏭️ 下一手】或直达妙手/失误吧！`;
+    } else {
+      const entry = matchMoveLog[reviewCursor - 1];
+      engine.loadBoard(entry.boardAfter, entry.color === BLACK ? WHITE : BLACK);
+      engine.capturedStones = { ...(entry.capturedAfter || { 1: 0, 2: 0 }) };
+      if (reviewData && reviewData.bestMove && reviewData.bestMove.moveNum === entry.moveNum) {
+        reviewHighlight = { type: 'best', x: entry.x, y: entry.y };
+        petSpeech.textContent = `🌟 ${reviewData.bestMove.comment}`;
+      } else if (reviewData && reviewData.worstMove && reviewData.worstMove.moveNum === entry.moveNum) {
+        reviewHighlight = {
+          type: 'mistake',
+          x: entry.x,
+          y: entry.y,
+          betterX: reviewData.worstMove.betterX,
+          betterY: reviewData.worstMove.betterY
+        };
+        petSpeech.textContent = `💦 ${reviewData.worstMove.comment}`;
+      } else {
+        const who = entry.color === BLACK ? '⚫ 黑棋' : '⚪ 白棋';
+        petSpeech.textContent = entry.isPass
+          ? `🔍 复盘第 ${entry.moveNum}/${matchMoveLog.length} 手：${who} 停一手 (Pass)`
+          : `🔍 复盘第 ${entry.moveNum}/${matchMoveLog.length} 手：${who} 落在 (${entry.x + 1}列·${entry.y + 1}行)`;
+      }
+    }
+    updateCachedInfluence();
+    updateScoreDisplay();
+    drawBoard();
+  }
+
+  function startMatchReview() {
+    if (matchMoveLog.length === 0) return;
+    clearAITimer();
+    clearHint();
+    isReviewMode = true;
+    reviewData = ai.analyzeMatchReview(matchMoveLog, isCaptureGameMode);
+    if (matchControls) matchControls.style.display = 'none';
+    if (reviewControls) reviewControls.style.display = 'flex';
+    const firstJump = reviewData.bestMove
+      ? reviewData.bestMove.moveNum
+      : (reviewData.worstMove ? reviewData.worstMove.moveNum : matchMoveLog.length);
+    renderReviewStep(firstJump);
+    if (VoiceNarrator.isEnabled()) {
+      if (reviewData.bestMove) {
+        VoiceNarrator.speakReview('review_best', reviewData.bestMove.comment, true);
+      } else if (reviewData.worstMove) {
+        VoiceNarrator.speakReview('review_mistake', reviewData.worstMove.comment, true);
+      } else {
+        VoiceNarrator.speakReview('review_no_mistake', "这一局你下得非常稳健，几乎没有明显失误哦！", true);
+      }
+    }
+  }
+
+  function exitMatchReview() {
+    isReviewMode = false;
+    reviewData = null;
+    reviewHighlight = null;
+    if (reviewControls) reviewControls.style.display = 'none';
+    if (currentMode === 'match' && matchControls) {
+      matchControls.style.display = 'flex';
+      resetMatch();
+    }
+  }
+
   // 对战重开
   function resetMatch() {
     clearAITimer();
     clearHint();
     clearFollowUpTimers();
+    isReviewMode = false;
+    reviewData = null;
+    reviewHighlight = null;
+    matchMoveLog = [];
+    if (reviewControls) reviewControls.style.display = 'none';
+    if (currentMode === 'match' && matchControls) matchControls.style.display = 'flex';
     usedTesujiInMatch.clear(); // 清空手筋去重记录
     const size = parseInt(selectBoardSize.value, 10);
     engine.reset(size);
@@ -1991,6 +2395,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (scoreBox) scoreBox.style.display = 'none';
     academyControls.style.display = 'block';
     matchControls.style.display = 'none';
+    if (reviewControls) reviewControls.style.display = 'none';
+    isReviewMode = false;
+    reviewHighlight = null;
     currentMode = 'academy';
     petAvatar.textContent = '🐼';
     petName.textContent = '熊猫师傅';
@@ -2033,6 +2440,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (scoreBox) scoreBox.style.display = 'none';
     if (btnStartPractice) btnStartPractice.style.display = 'none';
     if (answerRevealBox) answerRevealBox.style.display = 'none';
+    if (reviewControls) reviewControls.style.display = 'none';
+    isReviewMode = false;
+    reviewHighlight = null;
     renderBadges();
   };
 
@@ -2045,6 +2455,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // 撤回玩家和 AI 各一步
       engine.undo();
       engine.undo();
+      if (matchMoveLog.length > 0) matchMoveLog.pop();
+      if (matchMoveLog.length > 0) matchMoveLog.pop();
       updateCachedInfluence();
       drawBoard();
       updateScoreDisplay();
@@ -2200,6 +2612,79 @@ document.addEventListener('DOMContentLoaded', () => {
     btnStageMaster.onclick = () => {
       SoundEffects.playClick();
       switchStage('master');
+    };
+  }
+
+  if (btnStageCombo) {
+    btnStageCombo.onclick = () => {
+      SoundEffects.playClick();
+      switchStage('combo');
+    };
+  }
+
+  if (btnStageDaily) {
+    btnStageDaily.onclick = () => {
+      SoundEffects.playClick();
+      switchStage('daily');
+    };
+  }
+
+  if (btnStageWrong) {
+    btnStageWrong.onclick = () => {
+      SoundEffects.playClick();
+      switchStage('wrong');
+    };
+  }
+
+  if (btnReviewPrev) {
+    btnReviewPrev.onclick = () => {
+      SoundEffects.playClick();
+      renderReviewStep(reviewCursor - 1);
+    };
+  }
+
+  if (btnReviewNext) {
+    btnReviewNext.onclick = () => {
+      SoundEffects.playClick();
+      renderReviewStep(reviewCursor + 1);
+    };
+  }
+
+  if (btnReviewBest) {
+    btnReviewBest.onclick = () => {
+      SoundEffects.playClick();
+      if (reviewData && reviewData.bestMove) {
+        renderReviewStep(reviewData.bestMove.moveNum);
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speakReview('review_best', reviewData.bestMove.comment, true);
+        }
+      } else {
+        petSpeech.textContent = "这局还没下出明显妙手，多试试用学到的手筋哦！";
+      }
+    };
+  }
+
+  if (btnReviewMistake) {
+    btnReviewMistake.onclick = () => {
+      SoundEffects.playClick();
+      if (reviewData && reviewData.worstMove) {
+        renderReviewStep(reviewData.worstMove.moveNum);
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speakReview('review_mistake', reviewData.worstMove.comment, true);
+        }
+      } else {
+        petSpeech.textContent = "太稳啦！这局没有发现明显大失误哦！";
+        if (VoiceNarrator.isEnabled()) {
+          VoiceNarrator.speakReview('review_no_mistake', petSpeech.textContent, true);
+        }
+      }
+    };
+  }
+
+  if (btnExitReview) {
+    btnExitReview.onclick = () => {
+      SoundEffects.playClick();
+      exitMatchReview();
     };
   }
 

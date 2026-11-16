@@ -1,6 +1,6 @@
-// sw.js - Service Worker 离线缓存引擎（v15 包含40关全量 Edge Neural 微软神经网络真声及全部交互提示音预缓存）
+// sw.js - Service Worker 离线缓存引擎（v16 包含50关全量 Edge Neural 微软神经网络真声、局后复盘及交互提示音预缓存）
 
-const CACHE_NAME = 'kids-go-v15-neural-hints';
+const CACHE_NAME = 'kids-go-v16-combo-review';
 
 const STATIC_ASSETS = [
   './',
@@ -27,6 +27,10 @@ const VOICE_PACKS = [
 
 const BASE_AUDIO_CLIPS = [
   'hint_coach',
+  'step_continue',
+  'review_best',
+  'review_mistake',
+  'review_no_mistake',
   'err_choice_badge',
   'err_occupied',
   'err_suicide',
@@ -42,9 +46,9 @@ const BASE_AUDIO_CLIPS = [
   'match_lose'
 ];
 
-// 包含全量关卡语音 p1_intro ~ p40_win, p40_wrong
+// 包含全量关卡语音 p1_intro ~ p40_win, p50_win, p50_wrong
 const PUZZLE_AUDIO_CLIPS = [];
-for (let id = 1; id <= 40; id++) {
+for (let id = 1; id <= 50; id++) {
   ['intro', 'win', 't1', 't2', 'ans', 'wrong'].forEach(type => {
     PUZZLE_AUDIO_CLIPS.push(`p${id}_${type}`);
   });

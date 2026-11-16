@@ -66,7 +66,8 @@ const VoiceNarrator = (() => {
 
     // 若运行于打包后的单文件离线 HTML 模式，优先读取内嵌的 Base64 神经网络语音数据
     if (typeof window !== 'undefined' && window.INLINE_VOICE_PACKS) {
-      const packData = window.INLINE_VOICE_PACKS[pack] || window.INLINE_VOICE_PACKS['xiaoxiao'];
+      const availableKeys = Object.keys(window.INLINE_VOICE_PACKS);
+      const packData = window.INLINE_VOICE_PACKS[pack] || window.INLINE_VOICE_PACKS['xiaoxiao'] || (availableKeys.length ? window.INLINE_VOICE_PACKS[availableKeys[0]] : null);
       if (packData && packData[clipName]) {
         audioSrc = packData[clipName];
       }
@@ -170,6 +171,16 @@ const VoiceNarrator = (() => {
     playClip('hint_coach', fallbackText, isManual);
   }
 
+  // 朗读连环题目步间鼓励引导（step_continue.mp3）
+  function speakStepContinue(fallbackText = '', isManual = false) {
+    playClip('step_continue', fallbackText, isManual);
+  }
+
+  // 朗读局后复盘点评（review_best / review_mistake / review_no_mistake）
+  function speakReview(clipName, fallbackText = '', isManual = true) {
+    playClip(clipName, fallbackText, isManual);
+  }
+
   // 朗读对弈事件（提子、打吃、胜利、晋级等）
   function speakMatchEvent(eventName, fallbackText = '', isManual = false) {
     playClip(eventName, fallbackText, isManual);
@@ -251,6 +262,8 @@ const VoiceNarrator = (() => {
     speakError,
     speakWrong,
     speakHint,
+    speakStepContinue,
+    speakReview,
     speakMatchEvent,
     speak,
     stop,

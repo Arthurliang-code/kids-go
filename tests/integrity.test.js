@@ -6,10 +6,10 @@ console.log('====================================================');
 console.log('🚀 执行 AGENTS.md 规范：全量自动化闭环测试');
 console.log('====================================================');
 
-// 1. 题库完整性测试 (30关)
-console.log('\n[TEST 1] 题库数据结构与规则引擎闭环验证 (40关)...');
-if (PUZZLE_LEVELS.length !== 40) {
-  throw new Error(`预期 40 关，实际得到 ${PUZZLE_LEVELS.length} 关！`);
+// 1. 题库完整性测试 (50关)
+console.log('\n[TEST 1] 题库数据结构与规则引擎闭环验证 (50关)...');
+if (PUZZLE_LEVELS.length !== 50) {
+  throw new Error(`预期 50 关，实际得到 ${PUZZLE_LEVELS.length} 关！`);
 }
 
 const engine = new GoEngine(9);
@@ -56,7 +56,7 @@ PUZZLE_LEVELS.forEach((p, idx) => {
 
   // 正解落子验证
   engine.loadBoard(p.initialBoard, p.playerColor || BLACK);
-  if (p.type === 'play_move' || p.type === 'choice_comparison') {
+  if (p.type === 'play_move' || p.type === 'choice_comparison' || p.type === 'multi_step') {
     if (!p.validMoves || p.validMoves.length === 0) {
       throw new Error(`第 ${p.id} 关为 ${p.type} 但缺少 validMoves！`);
     }
@@ -69,6 +69,28 @@ PUZZLE_LEVELS.forEach((p, idx) => {
         throw new Error(`第 ${p.id} 关正解落子 (${vm.x}, ${vm.y}) 不符合围棋规则：${testRes.reason}`);
       }
     });
+
+    if (p.type === 'multi_step') {
+      if (!Array.isArray(p.steps) || p.steps.length < 2) {
+        throw new Error(`第 ${p.id} 关为 multi_step 连环题，但 steps 不足 2 步！`);
+      }
+      const seqEng = new GoEngine(p.boardSize);
+      seqEng.loadBoard(p.initialBoard, p.playerColor || BLACK);
+      p.steps.forEach((st, stIdx) => {
+        const mv = st.validMoves && st.validMoves[0];
+        if (!mv) throw new Error(`第 ${p.id} 关第 ${stIdx + 1} 步缺少 validMoves`);
+        const r1 = seqEng.play(mv.x, mv.y, p.playerColor || BLACK);
+        if (!r1.success) {
+          throw new Error(`第 ${p.id} 关第 ${stIdx + 1} 步落子 (${mv.x},${mv.y}) 非法: ${r1.reason}`);
+        }
+        if (st.aiReply) {
+          const r2 = seqEng.play(st.aiReply.x, st.aiReply.y, st.aiReply.color || WHITE);
+          if (!r2.success) {
+            throw new Error(`第 ${p.id} 关第 ${stIdx + 1} 步 AI 应手 (${st.aiReply.x},${st.aiReply.y}) 非法: ${r2.reason}`);
+          }
+        }
+      });
+    }
 
     if (p.type === 'choice_comparison') {
       if (!p.choices || p.choices.length < 2) {
@@ -177,13 +199,14 @@ const path = require('path');
 const voices = ['xiaoxiao', 'xiaoyi', 'yunxia', 'yunxi'];
 const clipTypes = ['intro', 't1', 't2', 'ans', 'win', 'wrong'];
 const universalTypes = [
-  'hint_coach', 'err_choice_badge', 'err_occupied', 'err_suicide', 
+  'hint_coach', 'step_continue', 'review_best', 'review_mistake', 'review_no_mistake',
+  'err_choice_badge', 'err_occupied', 'err_suicide', 
   'err_false_eye', 'err_not_eye', 'err_goal', 'err_liberty',
   'match_ai_atari', 'match_atari', 'match_capture', 'match_win', 'match_lose', 'match_promote'
 ];
 let missingClips = 0;
 
-for (let id = 1; id <= 40; id++) {
+for (let id = 1; id <= 50; id++) {
   clipTypes.forEach(type => {
     const filename = `p${id}_${type}.mp3`;
     voices.forEach(v => {
@@ -223,7 +246,7 @@ if (/['"`]\/api\/tts/.test(voiceContent)) {
   throw new Error('js/voice.js 存在未实现的 /api/tts 调用！');
 }
 
-console.log('✅ 全部 40 关 4 套音色（共 1,016 个教学与交互提示语音 MP3）及离线缓存清单校验通过！');
+console.log('✅ 全部 50 关 4 套音色（共 1,272 个教学与交互提示语音 MP3）及离线缓存清单校验通过！');
 console.log('====================================================');
 console.log('🎉 自动化测试通过，符合 AGENTS.md 准则！');
 console.log('====================================================');
